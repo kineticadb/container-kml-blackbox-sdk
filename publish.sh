@@ -1,9 +1,4 @@
 #! /bin/bash
 
-# Build first
-docker build -f Dockerfile -t kinetica-blackbox-sdk . 
-
-# Then publish
-docker tag kinetica-blackbox-sdk kinetica/kinetica-blackbox-sdk
-docker push kinetica/kinetica-blackbox-sdk
-docker tag kinetica-blackbox-sdk kinetica/kinetica-blackbox-sdk
+docker build -f Dockerfile -t kinetica/kinetica-blackbox-sdk:r7.0.0.0-beta3-2 . 
+docker push kinetica/kinetica-blackbox-sdk:r7.0.0.0-beta3-2
