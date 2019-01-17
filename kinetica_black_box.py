@@ -112,20 +112,20 @@ class KineticaBlackBox(object):
         method_to_call = getattr(__import__(self.bb_module), self.bb_method)
         logger.info(f"Dynamically loaded function {self.bb_method} from module {self.bb_module} for lambda application")
 
+        block_request_count = 0
         response_count=0
         while True:
 
             mpr = self.socket.recv_multipart()
-            #if mpr[0].decode() != topicfilter:
-            #    print(f"Inbound filter {mpr[0]} does not match subscribed filter {topicfilter}")
+            block_request_count += 1
 
             parts_received = len(mpr)
-            logger.info(f"Processing insert notification with {parts_received-1} frames")
+            logger.info(f"Processing insert notification with {parts_received-1} frames, block request {block_request_count}")
             
             audit_records_insert_queue=[]
             for mindex, m in enumerate(mpr[1:]):                    
                 inference_inbound_payload=gpudb.GPUdbRecord.decode_binary_data(schema_decoder, m)[0]
-                response_count=response_count+1
+                response_count += 1
 
                 # wipe out all previous results
                 entity_datum = collections.OrderedDict()
@@ -193,6 +193,7 @@ class KineticaBlackBox(object):
 
             # TODO: examine insert_status and determine if DB insert was a filure
             logger.info(f"Response sent back to DB with status")
+            logger.info(f"Completed Processing block request {block_request_count}")
     # end run
 
 # end class KineticaBlackBox

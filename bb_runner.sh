@@ -10,11 +10,11 @@ python -m bb_runner \
     --db-user $DB_USER \
     --db-pass $DB_PASS \
     --db-table $DB_TABL \
-    --zmq-host $ZMQ_HOST \
-    --zmq-port $ZMQ_PORT \
-    --zmq-topic $ZMQ_TOPC \
+    --zmq-dealer-host $ZMQ_DEALER_HOST \
+    --zmq-dealer-port $ZMQ_DEALER_PORT \
     --schema-inbound $SCHEMA_INBOUND  \
     --schema-outbound $SCHEMA_OUTBOUND \
+    --quiet
     2>&1 | tee bbox.log
 
 #--quiet -- this is optional to reduce standard output
