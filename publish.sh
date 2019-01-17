@@ -1,6 +1,9 @@
 #! /bin/bash
 
-docker tag byoc-blackbox-dep-base kinetica/byoc-blackbox-dep-base
-docker push kinetica/byoc-blackbox-dep-base
-docker tag byoc-blackbox-dep-base kinetica/byoc-blackbox-dep-base
+# Build first
+docker build -f Dockerfile -t kinetica-blackbox-sdk . 
 
+# Then publish
+docker tag kinetica-blackbox-sdk kinetica/kinetica-blackbox-sdk
+docker push kinetica/kinetica-blackbox-sdk
+docker tag kinetica-blackbox-sdk kinetica/kinetica-blackbox-sdk

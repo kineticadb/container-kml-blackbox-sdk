@@ -1,3 +1,3 @@
 #! /bin/bash
 
-docker build -f Dockerfile -t byoc-blackbox-dep-base . 
+docker build -f Dockerfile -t kinetica-blackbox-sdk . 

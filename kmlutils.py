@@ -62,9 +62,8 @@ def get_dep_details(api_base, dep_id):
 
     bbox_module = dep_details["response"]["item"]["base_model_inst"]["base_model"]["model_config"]["blackbox_module"]
     bbox_function = dep_details["response"]["item"]["base_model_inst"]["base_model"]["model_config"]["blackbox_function"]
-    inbound_zmq_topic = dep_details["response"]["item"]["model_dep_config"]["inp-tablemonitor"]["topic_id"]
     schema_inbound = json.dumps(dep_details["response"]["item"]["model_dep_config"]["inp-tablemonitor"]["type_schema"])
     schema_outbound = json.dumps(dep_details["response"]["item"]["model_dep_config"]["out-tablemonitor"]["type_schema"])
     table_outbound = dep_details["response"]["item"]["model_dep_config"]["out-tablemonitor"]["table_name"]
 
-    return (bbox_module, bbox_function, inbound_zmq_topic, schema_inbound, schema_outbound, table_outbound)
+    return (bbox_module, bbox_function, schema_inbound, schema_outbound, table_outbound)

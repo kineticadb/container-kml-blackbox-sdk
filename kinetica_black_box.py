@@ -24,7 +24,7 @@ class KineticaBlackBox(object):
 
     def __init__(self, bb_module, bb_method,
                  schema_inbound, schema_outbound,
-                 zmq_host, zmq_port, zmq_topic,
+                 zmq_dealer_host, zmq_dealer_port,
                  db_table, db_host = "127.0.0.1", db_port = "9191",
                  db_user = "", db_pass = "", be_quiet = False ):
         """Construct a new KineticaBlackBox object.
@@ -37,12 +37,10 @@ class KineticaBlackBox(object):
         :type schema_inbound: str
         :param schema_outbound:
         :type schema_outbound: str
-        :param zmq_host:
-        :type zmq_host: str
-        :param zmq_port:
-        :type zmq_port: str
-        :param zmq_topic:
-        :type zmq_topic: str
+        :param zmq_dealer_host:
+        :type zmq_dealer_host: str
+        :param zmq_dealer_port:
+        :type zmq_dealer_port: str
         :param db_table:
         :type db_table: str
         :param db_host: Default "127.0.0.1".
@@ -57,9 +55,8 @@ class KineticaBlackBox(object):
         """
 
         logger.info("Initializing KineticaBlackBox")
-        logger.info(f"zmq_host: {zmq_host}")
-        logger.info(f"zmq_port: {zmq_port}")
-        logger.info(f"zmq_topic: {zmq_topic}")
+        logger.info(f"zmq_dealer_host: {zmq_dealer_host}")
+        logger.info(f"zmq_dealer_port: {zmq_dealer_port}")
         logger.info(f"db_table: {db_table}")
         logger.info(f"db_host: {db_host}")
         logger.info(f"db_port: {db_port}")
@@ -97,13 +94,12 @@ class KineticaBlackBox(object):
         logger.info(json.dumps(json.loads(schema_outbound)))
 
         # Prepare ZMQ Communications
-        topic_source = "tcp://%s:%s" % (zmq_host,zmq_port)
+        zmq_dealer_uri = f"tcp://{zmq_dealer_host}:{zmq_dealer_port}"
         context = zmq.Context()
-        self.socket = context.socket(zmq.SUB)
-        topicfilter = bytes(zmq_topic, 'utf-8').decode()
-        logger.info("Listening for incoming requests on topic: %s via %s" % (topicfilter,topic_source))
-        self.socket.connect(topic_source)
-        self.socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
+        self.socket = context.socket(zmq.PULL)
+        #logger.info("Listening for incoming requests on topic: %s via %s" % (topicfilter,topic_source))
+        self.socket.connect(zmq_dealer_uri)
+        #self.socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
     # end __init__
 
 
@@ -136,8 +132,8 @@ class KineticaBlackBox(object):
                 logger.info(f"Processing frame {1+mindex} of {parts_received}: Message count # {response_count} {inference_inbound_payload['guid']}")
 
                 # TODO: per code review w/ Eli 2 Jan 2019, this is unnecessary
-                for afield in outfields:
-                    entity_datum[afield["name"]]=None
+                #for afield in outfields:
+                #    entity_datum[afield["name"]]=None
                 # TODO: per code review w/ Eli 2 Jan 2019, this is unnecessary
 
                 entity_datum["success"]=0 # we start with the assumption of failure                
@@ -172,6 +168,7 @@ class KineticaBlackBox(object):
                     for k,v in outMap.items():
                         entity_datum[k]=v
                 except Exception as e:
+                    # TODO: As discussed at code review on 3 Jan 2019, push stack trace and input body to store_only field in output table
                     logger.error(e)
                     error_type, error, tb = sys.exc_info()
                     logger.error(traceback.format_tb(tb))
