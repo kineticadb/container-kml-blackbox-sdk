@@ -6,9 +6,10 @@ import collections
 import traceback
 import datetime
 import time
-
+import uuid
 import zmq
 import gpudb
+import datetime
 
 import kmllogger
 logger = kmllogger.attach_log(module="kml-bbox-sdk", log_name='kml', debug=True)
@@ -129,6 +130,10 @@ class KineticaBlackBox(object):
 
                 # wipe out all previous results
                 entity_datum = collections.OrderedDict()
+                if 'guid' not in inference_inbound_payload:
+                    inference_inbound_payload['guid'] = str(uuid.uuid4())
+                    inference_inbound_payload['receive_dt'] = datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
+                    logger.info(f"Assigned GUID {inference_inbound_payload['guid']} to serial-free inbound")
                 logger.info(f"Processing frame {1+mindex} of {parts_received}: Message count # {response_count} {inference_inbound_payload['guid']}")
 
                 # TODO: per code review w/ Eli 2 Jan 2019, this is unnecessary
