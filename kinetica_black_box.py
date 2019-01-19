@@ -95,9 +95,22 @@ class KineticaBlackBox(object):
                            password=db_pass)
 
         self.sink_table_audit = gpudb.GPUdbTable(name = db_table_audit, db = db)
-        self.sink_table_results = None
-        if self.db_table_results != "NOT_APPLICABLE":
+        
+        logger.info(f"DB Results Table {db_table_results}")
+        if db_table_results == "NOT_APPLICABLE":            
+            logger.info(f"All results will be persisted to Audit DB Table {db_table_audit}")
+            self.sink_table_results = None
+        else:
             self.sink_table_results = gpudb.GPUdbTable(name = db_table_results, db = db)
+            logger.info(f"Established connection to sink table")
+            logger.info(self.sink_table_results)
+
+        logger.info(self.sink_table_results)
+        if self.sink_table_results is None:
+            logger.info(f"All results will be persisted to Audit DB Table only")            
+        else:
+            logger.info(f"All results will be persisted to both Audit and output DB Tables {db_table_results}")
+
 
         logger.info("Prepping response with with schema")
         logger.info(json.dumps(json.loads(schema_outbound)))
@@ -203,11 +216,15 @@ class KineticaBlackBox(object):
                 audit_records_insert_queue.append(entity_datum)
 
             _ = self.sink_table_audit.insert_records(audit_records_insert_queue)
-            if self.sink_table_results:
+            if self.sink_table_results is None:
+                logger.info(f"Response sent back to DB audit table")
+            else:
                 _ = self.sink_table_results.insert_records(audit_records_insert_queue)
+                logger.info(f"Response sent back to DB output table and audit table")
+                
 
             # TODO: examine insert_status and determine if DB insert was a filure
-            logger.info(f"Response sent back to DB with status")
+            
             logger.info(f"Completed Processing block request {block_request_count}")
     # end run
 
