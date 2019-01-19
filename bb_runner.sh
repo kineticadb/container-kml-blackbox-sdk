@@ -9,7 +9,8 @@ python -m bb_runner \
     --db-port $DB_PORT \
     --db-user $DB_USER \
     --db-pass $DB_PASS \
-    --db-table $DB_TABL \
+    --db-table-audit $DB_TABL_AUDIT \
+    --db-table-results $DB_TABL_RESULTS \
     --zmq-dealer-host $ZMQ_DEALER_HOST \
     --zmq-dealer-port $ZMQ_DEALER_PORT \
     --schema-inbound $SCHEMA_INBOUND  \

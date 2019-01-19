@@ -21,12 +21,13 @@ class KineticaBlackBox(object):
     socket = None
     schema_inbound = None
     schema_outbound = None
-    sink_table = None
+    sink_table_audit = None
+    sink_table_results = None
 
     def __init__(self, bb_module, bb_method,
                  schema_inbound, schema_outbound,
                  zmq_dealer_host, zmq_dealer_port,
-                 db_table, db_host = "127.0.0.1", db_port = "9191",
+                 db_table_audit, db_table_results, db_host = "127.0.0.1", db_port = "9191",
                  db_user = "", db_pass = "", be_quiet = False ):
         """Construct a new KineticaBlackBox object.
 
@@ -42,8 +43,10 @@ class KineticaBlackBox(object):
         :type zmq_dealer_host: str
         :param zmq_dealer_port:
         :type zmq_dealer_port: str
-        :param db_table:
-        :type db_table: str
+        :param db_table_audit:
+        :type db_table_audit: str
+        :param db_table_results:
+        :type db_table_results: str
         :param db_host: Default "127.0.0.1".
         :type db_host: str
         :param db_port: Default "9191".
@@ -58,7 +61,8 @@ class KineticaBlackBox(object):
         logger.info("Initializing KineticaBlackBox")
         logger.info(f"zmq_dealer_host: {zmq_dealer_host}")
         logger.info(f"zmq_dealer_port: {zmq_dealer_port}")
-        logger.info(f"db_table: {db_table}")
+        logger.info(f"db_table a: {db_table_audit}")
+        logger.info(f"db_table r: {db_table_results}")
         logger.info(f"db_host: {db_host}")
         logger.info(f"db_port: {db_port}")
         logger.info(f"db_user: {db_user}")
@@ -78,7 +82,7 @@ class KineticaBlackBox(object):
         self.bb_method = bb_method
 
         # Prepare DB Communications
-        logger.info(f"Attempting to connect to DB at {db_host}:{db_port} to push to {db_table}")
+        logger.info(f"Attempting to connect to DB at {db_host}:{db_port} to push to {db_table_audit}")
         if db_user == 'no_cred' or db_pass == 'no_cred':
             db=gpudb.GPUdb(encoding='BINARY',
                            host=db_host,
@@ -90,7 +94,9 @@ class KineticaBlackBox(object):
                            username=db_user,
                            password=db_pass)
 
-        self.sink_table = gpudb.GPUdbTable(name = db_table, db = db)
+        self.sink_table_audit = gpudb.GPUdbTable(name = db_table_audit, db = db)
+        self.sink_table_results = gpudb.GPUdbTable(name = db_table_results, db = db)
+
         logger.info("Prepping response with with schema")
         logger.info(json.dumps(json.loads(schema_outbound)))
 
@@ -194,7 +200,8 @@ class KineticaBlackBox(object):
                 logger.debug(entity_datum)
                 audit_records_insert_queue.append(entity_datum)
 
-            insert_status=self.sink_table.insert_records(audit_records_insert_queue)
+            insert_status=self.sink_table_results.insert_records(audit_records_insert_queue)
+            insert_status=self.sink_table_audit.insert_records(audit_records_insert_queue)
 
             # TODO: examine insert_status and determine if DB insert was a filure
             logger.info(f"Response sent back to DB with status")

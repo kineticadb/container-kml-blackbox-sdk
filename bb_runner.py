@@ -23,7 +23,8 @@ if __name__ == '__main__':
     parser.add_argument("--db-port", type=int, help = "Kinetica DB Port (defaults to 9191)")
     parser.add_argument("--db-user", help = "Kinetica DB blackbox service account user")
     parser.add_argument("--db-pass", help = "Kinetica DB blackbox service account pass")
-    parser.add_argument("--db-table", help = "Blackbox results audit output table")
+    parser.add_argument("--db-table-audit", help = "Blackbox output audit table")
+    parser.add_argument("--db-table-results", help = "Blackbox output results table")
     parser.add_argument("--zmq-dealer-host", required = True, help = "BlackBox Dealer ZMQ Host (usually same as DB host node)")
     parser.add_argument("--zmq-dealer-port", type=int, help = "BlackBox Dealer ZMQ Port Port (defaults to 9009)")
     parser.add_argument("--bbx-module", help = "Blackbox module for execution")
@@ -58,7 +59,8 @@ if __name__ == '__main__':
     logger.info(f"   KML Port {args.kml_port}")
     logger.info(f" BBX Module {args.bbx_module}")
     logger.info(f"   BBX Func {args.bbx_function}")
-    logger.info(f"   DB Table {args.db_table}")
+    logger.info(f" DB Table A {args.db_table_audit}")
+    logger.info(f" DB Table R {args.db_table_results}")
 
     schema_inbound = None
     schema_outbound = None
@@ -85,8 +87,11 @@ if __name__ == '__main__':
         if args.bbx_function:
             logger.error("Configured to obtain inbound/outbound schema from KML REST API...but encountered ambiguous bbx_function command-line entry")
             sys.exit(1)
-        if args.db_table:
-            logger.error("Configured to obtain inbound/outbound schema from KML REST API...but encountered ambiguous db_table command-line entry")
+        if args.db_table_audit:
+            logger.error("Configured to obtain inbound/outbound schema from KML REST API...but encountered ambiguous db_table (audit) command-line entry")
+            sys.exit(1)
+        if args.db_table_results:
+            logger.error("Configured to obtain inbound/outbound schema from KML REST API...but encountered ambiguous db_table (results) command-line entry")
             sys.exit(1)
 
         from kmlutils import validate_kml_api, get_dep_details
@@ -114,22 +119,27 @@ if __name__ == '__main__':
         if not args.bbx_function:
             logger.error("Configured to obtain bbx_function from command line arguments...but no command-line inputs found")
             sys.exit(1)
-        if not args.db_table:
-            logger.error("Configured to obtain output db_table from command line arguments...but no command-line inputs found")
+        if not args.db_table_audit:
+            logger.error("Configured to obtain output db_table_audit from command line arguments...but no command-line inputs found")
+            sys.exit(1)
+        if not args.db_table_results:
+            logger.error("Configured to obtain output db_table_results from command line arguments...but no command-line inputs found")
             sys.exit(1)
 
         schema_inbound = args.schema_inbound
         schema_outbound = args.schema_outbound
         bbx_module = args.bbx_module
         bbx_function = args.bbx_function
-        db_table = args.db_table    
+        db_table_results = args.db_table_results    
+        db_table_audit = args.db_table_audit    
 
     logger.info(f"  Schema In {schema_inbound}")
     logger.info(f" Schema Out {schema_outbound}")
 
     logger.info(f" BBX Module {bbx_module}")
     logger.info(f" BBX Function {bbx_function}")
-    logger.info(f" Table Out {db_table}")
+    logger.info(f" Table Out Audit {db_table_audit}")
+    logger.info(f" Table Out Results {db_table_results}")
 
     bb = KineticaBlackBox(
             bb_module = bbx_module, 
@@ -138,7 +148,8 @@ if __name__ == '__main__':
             schema_outbound = schema_outbound, 
             zmq_dealer_host = args.zmq_dealer_host, 
             zmq_dealer_port = args.zmq_dealer_port, 
-            db_table = db_table, 
+            db_table_audit = db_table_audit, 
+            db_table_results = db_table_results, 
             db_host  = args.db_host,  
             db_port  = args.db_port, 
             db_user  = args.db_user, 
