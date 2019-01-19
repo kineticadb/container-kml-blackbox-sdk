@@ -95,7 +95,9 @@ class KineticaBlackBox(object):
                            password=db_pass)
 
         self.sink_table_audit = gpudb.GPUdbTable(name = db_table_audit, db = db)
-        self.sink_table_results = gpudb.GPUdbTable(name = db_table_results, db = db)
+        self.sink_table_results = None
+        if db_table_results != "NOT_APPLICABLE":
+            self.sink_table_results = gpudb.GPUdbTable(name = db_table_results, db = db)
 
         logger.info("Prepping response with with schema")
         logger.info(json.dumps(json.loads(schema_outbound)))
@@ -200,8 +202,9 @@ class KineticaBlackBox(object):
                 logger.debug(entity_datum)
                 audit_records_insert_queue.append(entity_datum)
 
-            insert_status=self.sink_table_results.insert_records(audit_records_insert_queue)
-            insert_status=self.sink_table_audit.insert_records(audit_records_insert_queue)
+            _ = self.sink_table_audit.insert_records(audit_records_insert_queue)
+            if sink_table_results:
+                _ = self.sink_table_results.insert_records(audit_records_insert_queue)
 
             # TODO: examine insert_status and determine if DB insert was a filure
             logger.info(f"Response sent back to DB with status")
