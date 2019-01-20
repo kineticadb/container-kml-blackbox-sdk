@@ -158,8 +158,8 @@ class KineticaBlackBox(object):
                 logger.info(f"Processing frame {1+mindex} of {parts_received}: Message count # {response_count} {inference_inbound_payload['guid']}")
 
                 # TODO: per code review w/ Eli 2 Jan 2019, this is unnecessary
-                #for afield in outfields:
-                #    entity_datum[afield["name"]]=None
+                for afield in outfields:
+                    entity_datum[afield["name"]]=None
                 # TODO: per code review w/ Eli 2 Jan 2019, this is unnecessary
 
                 entity_datum["success"]=0 # we start with the assumption of failure                
