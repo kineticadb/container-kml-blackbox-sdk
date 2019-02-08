@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 # This is only for development debugging, will be removed when we go to PROD
 RUN apt-get install -y git htop wget nano
 
-RUN pip install gpudb==7.0.0.0b3 zmq requests
+RUN pip install gpudb==7.0.0.0 zmq requests
 
 RUN mkdir /opt/gpudb
 RUN mkdir /opt/gpudb/kml
