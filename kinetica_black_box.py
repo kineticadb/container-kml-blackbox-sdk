@@ -200,6 +200,7 @@ class KineticaBlackBox(object):
                         error_type, error, tb = sys.exc_info()
                         logger.error(traceback.format_tb(tb))
                         traceback.print_exc(file=sys.stdout)
+                        entity_datum["errorlog"]="\n".join(traceback.format_tb(tb))
 
                     # -------------------------------------------------------------------------
                     # BLACKBOX INTERACTION - **COMPLETED**
