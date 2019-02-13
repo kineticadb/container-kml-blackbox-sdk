@@ -5,8 +5,7 @@ set -ex
 python -m bb_runner \
     --bbx-module $BLACKBOX_MODULE \
     --bbx-function $BLACKBOX_FUNCTION \
-    --db-host $DB_HOST \
-    --db-port $DB_PORT \
+    --db-conn-str $DB_CONN_STR \
     --db-user $DB_USER \
     --db-pass $DB_PASS \
     --db-table-audit $DB_TABL_AUDIT \

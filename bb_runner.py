@@ -19,8 +19,7 @@ if __name__ == '__main__':
     parser.set_defaults(be_quiet=False)
 
     # Mandatory input value
-    parser.add_argument("--db-host", required = True, help = "Kinetica DB Host")
-    parser.add_argument("--db-port", type=int, help = "Kinetica DB Port (defaults to 9191)")
+    parser.add_argument("--db-conn-str", required = True, help = "Kinetica DB Connection String")
     parser.add_argument("--db-user", help = "Kinetica DB blackbox service account user")
     parser.add_argument("--db-pass", help = "Kinetica DB blackbox service account pass")
     parser.add_argument("--db-table-audit", help = "Blackbox output audit table")
@@ -32,8 +31,7 @@ if __name__ == '__main__':
 
     # Path A - KML REST API Driven Details
     parser.add_argument("--deployment-id", type=int, help = "KML Deployment Entity ID")
-    parser.add_argument("--kml-host", help = "KML REST API Host")
-    parser.add_argument("--kml-port", type=int, help = "KML REST API Port")
+    parser.add_argument("--kml-api-base", help = "KML REST API Base (protocol, host, port)")
 
     # Path B - Command-line Driven Details
     parser.add_argument("--schema-inbound", help = "Blackbox inbound message schema")
@@ -47,16 +45,14 @@ if __name__ == '__main__':
     args = parser.parse_args()  
 
     logger.info("Arguments interpreted and defaults applied as required")
-    logger.info(f"    DB Host {args.db_host}")
-    logger.info(f"    DB Port {args.db_port}")
+    logger.info(f"DB Conn Str {args.db_conn_str}")
     logger.info(f"    DB User {args.db_user}")
     #logger.info(f"    DB Pass {args.db_pass}")
     logger.info(f"   ZMQ Host {args.zmq_dealer_host}")    
     logger.info(f"   ZMQ Port {args.zmq_dealer_port}")
     logger.info(f" Quiet Mode {args.be_quiet}")
 
-    logger.info(f"   KML Host {args.kml_host}")
-    logger.info(f"   KML Port {args.kml_port}")
+    logger.info(f"KML APIBase {args.kml_api_base}")
     logger.info(f" BBX Module {args.bbx_module}")
     logger.info(f"   BBX Func {args.bbx_function}")
     logger.info(f" DB Table A {args.db_table_audit}")
@@ -95,14 +91,13 @@ if __name__ == '__main__':
             sys.exit(1)
 
         from kmlutils import validate_kml_api, get_dep_details
-        kml_api_base = f"http://{args.kml_host}:{args.kml_port}/"
-        if not validate_kml_api(api_base = kml_api_base):
+        if not validate_kml_api(api_base = args.kml_api_base):
             logger.error("Unsuccessful reaching out to KML REST API")
             sys.exit(1)
         else:
             logger.info("Successfully connected to KML REST API")
 
-        bbx_module, bbx_function, schema_inbound, schema_outbound, db_table = get_dep_details(api_base = kml_api_base, dep_id = args.deployment_id)
+        bbx_module, bbx_function, schema_inbound, schema_outbound, db_table = get_dep_details(api_base = args.kml_api_base, dep_id = args.deployment_id)
 
 
     else:
@@ -150,9 +145,8 @@ if __name__ == '__main__':
             zmq_dealer_port = args.zmq_dealer_port, 
             db_table_audit = db_table_audit, 
             db_table_results = db_table_results, 
-            db_host  = args.db_host,  
-            db_port  = args.db_port, 
-            db_user  = args.db_user, 
+            db_conn_str  = args.db_conn_str,
+            db_user  = args.db_user,
             db_pass  = args.db_pass,
             be_quiet = args.be_quiet)
     

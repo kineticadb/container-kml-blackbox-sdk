@@ -27,7 +27,7 @@ class KineticaBlackBox(object):
     def __init__(self, bb_module, bb_method,
                  schema_inbound, schema_outbound,
                  zmq_dealer_host, zmq_dealer_port,
-                 db_table_audit, db_table_results, db_host = "127.0.0.1", db_port = "9191",
+                 db_table_audit, db_table_results, db_conn_str,
                  db_user = "", db_pass = "", be_quiet = False ):
         """Construct a new KineticaBlackBox object.
 
@@ -63,9 +63,9 @@ class KineticaBlackBox(object):
         logger.info(f"zmq_dealer_port: {zmq_dealer_port}")
         logger.info(f"db_table a: {db_table_audit}")
         logger.info(f"db_table r: {db_table_results}")
-        logger.info(f"db_host: {db_host}")
-        logger.info(f"db_port: {db_port}")
+        logger.info(f"db_conn_str: {db_conn_str}")
         logger.info(f"db_user: {db_user}")
+        logger.info(f"db_pass: *******")
         logger.info(f"schema_inbound: {schema_inbound}")
         logger.info(f"schema_outbound: {schema_outbound}")
         logger.info(f"bb_module: {bb_module}")
@@ -82,15 +82,13 @@ class KineticaBlackBox(object):
         self.bb_method = bb_method
 
         # Prepare DB Communications
-        logger.info(f"Attempting to connect to DB at {db_host}:{db_port} to push to {db_table_audit}")
+        logger.info(f"Attempting to connect to DB at {db_conn_str} to push to {db_table_audit}")
         if db_user == 'no_cred' or db_pass == 'no_cred':
             db=gpudb.GPUdb(encoding='BINARY',
-                           host=db_host,
-                           port=db_port)
+                           host=db_conn_str)
         else:
             db=gpudb.GPUdb(encoding='BINARY',
-                           host=db_host,
-                           port=db_port,
+                           host=db_conn_str,
                            username=db_user,
                            password=db_pass)
 
