@@ -141,7 +141,7 @@ class KineticaBlackBox(object):
                 block_request_count += 1
 
                 parts_received = len(mpr)
-                logger.info(f"Processing insert notification with {parts_received-1} frames, block request {block_request_count}")
+                logger.info(f"Properly Processing insert notification with {parts_received-1} frames, block request {block_request_count}")
                 
                 audit_records_insert_queue=[]
                 for mindex, m in enumerate(mpr[1:]):                    
@@ -153,7 +153,9 @@ class KineticaBlackBox(object):
                     if 'guid' not in inference_inbound_payload:
                         inference_inbound_payload['guid'] = str(uuid.uuid4())
                         inference_inbound_payload['receive_dt'] = datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
-                        logger.info(f"Assigned GUID {inference_inbound_payload['guid']} to serial-free inbound")
+                        logger.debug(f"Assigned GUID {inference_inbound_payload['guid']} to serial-free inbound")
+                        entity_datum["guid"]=inference_inbound_payload['guid']
+                        entity_datum["receive_dt"]=inference_inbound_payload['receive_dt']
                     logger.info(f"Processing frame {1+mindex} of {parts_received}: Message count # {response_count} {inference_inbound_payload['guid']}")
 
                     # TODO: per code review w/ Eli 2 Jan 2019, this is unnecessary
