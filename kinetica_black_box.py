@@ -23,6 +23,7 @@ class KineticaBlackBox(object):
     schema_outbound = None
     sink_table_audit = None
     sink_table_results = None
+    be_quiet = False
 
     def __init__(self, bb_module, bb_method,
                  schema_inbound, schema_outbound,
@@ -75,6 +76,7 @@ class KineticaBlackBox(object):
             import logging
             logger.setLevel(logging.INFO)
 
+        self.be_quiet = be_quiet
         self.schema_inbound = schema_inbound
         self.schema_outbound = schema_outbound
 
@@ -141,7 +143,7 @@ class KineticaBlackBox(object):
                 block_request_count += 1
 
                 parts_received = len(mpr)
-                logger.info(f"Properly Processing insert notification with {parts_received-1} frames, block request {block_request_count}")
+                logger.info(f"Processing insert notification with {parts_received-1} frames, block request {block_request_count}")
                 
                 audit_records_insert_queue=[]
                 for mindex, m in enumerate(mpr[1:]):                    
@@ -149,81 +151,78 @@ class KineticaBlackBox(object):
                     response_count += 1
 
                     # wipe out all previous results
-                    entity_datum = collections.OrderedDict()
+                    results_package = collections.OrderedDict()
                     if 'guid' not in inference_inbound_payload:
                         inference_inbound_payload['guid'] = str(uuid.uuid4())
                         inference_inbound_payload['receive_dt'] = datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
                         logger.debug(f"Assigned GUID {inference_inbound_payload['guid']} to serial-free inbound")
-                        entity_datum["guid"]=inference_inbound_payload['guid']
-                        entity_datum["receive_dt"]=inference_inbound_payload['receive_dt']
+                        #results_package["guid"]=inference_inbound_payload['guid']
+                        #results_package["receive_dt"]=inference_inbound_payload['receive_dt']
                     logger.info(f"Processing frame {1+mindex} of {parts_received}: Message count # {response_count} {inference_inbound_payload['guid']}")
 
-                    # TODO: per code review w/ Eli 2 Jan 2019, this is unnecessary
+                    results_package["success"]=0 # we start with the assumption of failure
                     for afield in outfields:
-                        entity_datum[afield["name"]]=None
-                    # TODO: per code review w/ Eli 2 Jan 2019, this is unnecessary
-
-                    entity_datum["success"]=0 # we start with the assumption of failure                
-
-                    process_start_dt=datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
-                    logger.debug("\tDecoded task %s off wire for inference" % inference_inbound_payload["guid"])
-                    for k,v in inference_inbound_payload.items():
-                        logger.debug("\t%s: %s" % (k,v))
-
+                        results_package[afield["name"]]=None
                     # by default send back all inputs as well as our calculated outputs
                     for k,v in inference_inbound_payload.items():
-                        entity_datum[k]=v
+                        results_package[k]=v
+
+                    process_start_dt=datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
+                    if not self.be_quiet:
+                        logger.debug("\tDecoded task %s off wire for inference" % inference_inbound_payload["guid"])
+                        for k,v in inference_inbound_payload.items():
+                            logger.debug("\t%s: %s" % (k,v))
 
                     # -------------------------------------------------------------------------
                     # BLACKBOX INTERACTION - **STARTING**
 
                     inMap = inference_inbound_payload
-                    logger.debug ("\tSending to blackbox:")
-                    for ki,vi in inMap.items():
-                        logger.debug("\t %s: %s" % (ki,vi))
+                    #if not self.be_quiet:
+                    #    logger.debug ("\tSending to blackbox:")
+                    #    for ki,vi in inMap.items():
+                    #        logger.debug("\t %s: %s" % (ki,vi))
 
                     inference_success=False
+                    results_package["success"]=0
                     try:
                         outMap = method_to_call(inMap)
                         inference_success=True
-
-                        logger.debug ("\tResults received from blackbox:")
-                        for ko,vo in outMap.items():
-                            logger.debug("\t %s: %s" % (ko,vo))
-                        logger.debug ("\t>> Completed")
+                        results_package["success"]=1
 
                         for k,v in outMap.items():
-                            entity_datum[k]=v
+                            results_package[k]=v
+
+                        if not self.be_quiet:
+                            logger.debug ("\tResults received from blackbox:")
+                            for ko,vo in outMap.items():
+                                logger.debug("\t %s: %s" % (ko,vo))
+                            logger.debug ("\t>> Completed")
+
                     except Exception as e:
                         # TODO: As discussed at code review on 3 Jan 2019, push stack trace and input body to store_only field in output table
                         logger.error(e)
                         error_type, error, tb = sys.exc_info()
                         logger.error(traceback.format_tb(tb))
                         traceback.print_exc(file=sys.stdout)
-                        entity_datum["errorlog"]="\n".join(traceback.format_tb(tb))
+                        results_package["errorlog"]="\n".join(traceback.format_tb(tb))
 
                     # -------------------------------------------------------------------------
                     # BLACKBOX INTERACTION - **COMPLETED**
 
                     process_end_dt=datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
-                    entity_datum["process_start_dt"]=process_start_dt
-                    entity_datum["process_end_dt"]=process_end_dt
-                    if inference_success:
-                        entity_datum["success"]=1
-                    else:
-                        entity_datum["success"]=0
+                    results_package["process_start_dt"]=process_start_dt
+                    results_package["process_end_dt"]=process_end_dt
 
                     logger.debug("Sending response back to DB:")
-                    logger.debug(entity_datum)
-                    audit_records_insert_queue.append(entity_datum)
+                    logger.debug(results_package)
+                    audit_records_insert_queue.append(results_package)
 
                 _ = self.sink_table_audit.insert_records(audit_records_insert_queue)
                 if self.sink_table_results is None:
                     logger.info(f"Response sent back to DB audit table")
                 else:
                     _ = self.sink_table_results.insert_records(audit_records_insert_queue)
-                    logger.info(f"Response sent back to DB output table and audit table")
-                    
+                    logger.info(f"Response sent back to DB output table and audit table")                    
 
                 # TODO: examine insert_status and determine if DB insert was a filure
                 
