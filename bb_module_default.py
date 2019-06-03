@@ -14,9 +14,11 @@ def blackbox_function_identity_multiout(inMap):
     return [outMap]
 
 def blackbox_function_identity_custom_multiout(inMap):
-    rows_out = 3
-    if "rows_out" in inMap:
-        rows_out = int(inMap["rows_out"])
+    rows_out = 1
+    if "character" in inMap and inMap["character"]=="Arvin Sloane":
+        rows_out = 2
+    if "character" in inMap and inMap["character"]=="Sidney Bristow":
+        rows_out = 2
     outMap = inMap
     return [outMap for i in range(rows_out)]
 
