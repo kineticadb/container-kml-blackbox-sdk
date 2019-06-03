@@ -10,6 +10,7 @@ import uuid
 import zmq
 import gpudb
 import datetime
+import copy
 
 import kmllogger
 logger = kmllogger.attach_log(module="kml-bbox-sdk", log_name='kml', debug=True)
@@ -164,6 +165,8 @@ class KineticaBlackBox(object):
                     for afield in outfields:
                         results_package[afield["name"]]=None
                     # by default send back all inputs as well as our calculated outputs
+
+                    # TODO: Replace this with a deep copy: https://docs.python.org/2/library/copy.html
                     for k,v in inference_inbound_payload.items():
                         results_package[k]=v
 
@@ -184,19 +187,37 @@ class KineticaBlackBox(object):
 
                     inference_success=False
                     results_package["success"]=0
+                    results_package["process_start_dt"]=process_start_dt
+
                     try:
-                        outMap = method_to_call(inMap)
+                        outMaps = method_to_call(inMap)
+
+
                         inference_success=True
                         results_package["success"]=1
+                        process_end_dt=datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
+                        results_package["process_end_dt"]=process_end_dt
 
-                        for k,v in outMap.items():
-                            results_package[k]=v
+                        # this enables us to handle responses from blackbox functions
+                        # that may not return lists, but only single {} outs
+                        if not isinstance(outMaps, list):
+                            logger.info ("Received lone dictionary function output, force listifying")
+                            outMaps = [outMaps,]
+                        else:
+                            logger.info (f"Received list of {len(outMaps)} dictionary outputs")
 
-                        if not self.be_quiet:
-                            logger.debug ("\tResults received from blackbox:")
-                            for ko,vo in outMap.items():
-                                logger.debug("\t %s: %s" % (ko,vo))
-                            logger.debug ("\t>> Completed")
+
+                        for outMap in outMaps:
+                            lineitem = copy.deepcopy(results_package)
+                            for k,v in outMap.items():
+                                lineitem[k]=v
+                            audit_records_insert_queue.append(lineitem)
+
+                            if not self.be_quiet:
+                                logger.debug ("\tResults received from blackbox:")
+                                for ko,vo in outMap.items():
+                                    logger.debug("\t %s: %s" % (ko,vo))
+                                logger.debug ("\t>> Completed")
 
                     except Exception as e:
                         # TODO: As discussed at code review on 3 Jan 2019, push stack trace and input body to store_only field in output table
@@ -205,17 +226,14 @@ class KineticaBlackBox(object):
                         logger.error(traceback.format_tb(tb))
                         traceback.print_exc(file=sys.stdout)
                         results_package["errorlog"]="\n".join(traceback.format_tb(tb))
+                        audit_records_insert_queue.append(results_package)
 
                     # -------------------------------------------------------------------------
                     # BLACKBOX INTERACTION - **COMPLETED**
 
-                    process_end_dt=datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
-                    results_package["process_start_dt"]=process_start_dt
-                    results_package["process_end_dt"]=process_end_dt
-
                     logger.debug("Sending response back to DB:")
-                    logger.debug(results_package)
-                    audit_records_insert_queue.append(results_package)
+                    #logger.debug(results_package)
+                    #audit_records_insert_queue.append(results_package)
 
                 _ = self.sink_table_audit.insert_records(audit_records_insert_queue)
                 if self.sink_table_results is None:
