@@ -9,6 +9,19 @@ def blackbox_function_identity(inMap):
     outMap = inMap
     return outMap
 
+def blackbox_function_identity_multiout(inMap):
+    outMap = inMap
+    return [outMap]
+
+def blackbox_function_identity_custom_multiout(inMap):
+    rows_out = 1
+    if "character" in inMap and inMap["character"]=="Arvin Sloane":
+        rows_out = 2
+    if "character" in inMap and inMap["character"]=="Sidney Bristow":
+        rows_out = 2
+    outMap = inMap
+    return [outMap for i in range(rows_out)]
+
 def blackbox_function_math(inMap):
     f1=int(inMap['figure1'])
     f2=int(inMap['figure2'])
@@ -24,6 +37,21 @@ def blackbox_function_math(inMap):
         'suminwords': mylabel + " " + str(int(f1+f2))
         }
     return outMap    
+
+def blackbox_function_math_multiout(inMap):
+    f1=int(inMap['figure1'])
+    f2=int(inMap['figure2'])
+    mylabel=inMap['mylabel']
+
+    if 'please_crash_me' in mylabel:
+        raise Exception("User-initiated purposeful failure! Go Figure")
+
+    out_q = [
+        {'operation':'sum', 'result':f1+f2},
+        {'operation':'product', 'result':f1*f2},
+        {'operation':'min', 'result':min([f1,f2])},
+        {'operation':'max', 'result':max([f1,f2])}]
+    return out_q
 
 def blackbox_function_advanced_math(inMap):
     f1=int(inMap['figure1'])
