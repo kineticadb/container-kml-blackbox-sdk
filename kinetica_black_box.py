@@ -225,7 +225,9 @@ class KineticaBlackBox(object):
                         error_type, error, tb = sys.exc_info()
                         logger.error(traceback.format_tb(tb))
                         traceback.print_exc(file=sys.stdout)
-                        results_package["errorlog"]="\n".join(traceback.format_tb(tb))
+                        results_package["errorstack"]="\n".join(traceback.format_tb(tb))                        
+                        if e:
+                            results_package["errorlog"]=str(e)
                         audit_records_insert_queue.append(results_package)
 
                     # -------------------------------------------------------------------------
