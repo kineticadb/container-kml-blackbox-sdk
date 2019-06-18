@@ -24,7 +24,7 @@ RUN pip install -r requirements.txt
 ADD bb_runner.sh ./
 ADD sdk ./sdk
 
-ADD bb_module_default.py /opt/gpudb/kml/bbx/bb_module_default.py
+ADD bb_module_default.py ./
 
 RUN ["chmod", "+x",  "bb_runner.sh"]
 ENTRYPOINT ["/opt/gpudb/kml/bbx/bb_runner.sh"]
