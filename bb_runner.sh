@@ -2,7 +2,7 @@
 set -ex
 
 # Running the primary model runner and passing in all arguments
-python -m bb_runner \
+python -m sdk.bb_runner \
     --bbx-module $BLACKBOX_MODULE \
     --bbx-function $BLACKBOX_FUNCTION \
     --db-conn-str $DB_CONN_STR \
@@ -16,5 +16,3 @@ python -m bb_runner \
     --schema-outbound $SCHEMA_OUTBOUND \
     --quiet
     2>&1 | tee bbox.log
-
-#--quiet -- this is optional to reduce standard output

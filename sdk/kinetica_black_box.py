@@ -7,14 +7,19 @@ import traceback
 import datetime
 import time
 import uuid
-import zmq
-import gpudb
 import datetime
 import copy
+import logging
 
-import kmllogger
-logger = kmllogger.attach_log(module="kml-bbox-sdk", log_name='kml', debug=True)
+import zmq
+import gpudb
 
+logger = logging.getLogger("kml-bbox-sdk")
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handlerC = logging.StreamHandler(sys.stdout)
+handlerC.setFormatter(formatter)
+logger.addHandler(handlerC)
 
 class KineticaBlackBox(object):
     """Kinetica black box class."""
@@ -258,3 +263,4 @@ class KineticaBlackBox(object):
     # end run
 
 # end class KineticaBlackBox
+
