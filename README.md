@@ -21,6 +21,8 @@ For help with containerizing models, the Kinetica Blackbox Wizard is available v
 
 ## Download and Configuration
 
+Download the Blackbox SDK from GitHub and select a version that is compatible with the current database version. The SDK version should be less than or equal to the current version of the database that the blackbox model will be running against. For example, if Kinetica is at version 7.0.3.0, the SDK tag version should be less than or equal to 7.0.3.0.
+
 1. Clone the project and change directory into the folder:
 
         git clone https://github.com/kineticadb/container-kml-blackbox-sdk.git
@@ -34,7 +36,7 @@ For help with containerizing models, the Kinetica Blackbox Wizard is available v
 
         git checkout tags/<tag_name>
 
-    **IMPORTANT:** The SDK version should be less than or equal to the current version of the database that the blackbox model will be running against. The latest version compatible is preferred. For example, if Kinetica is at version 7.0.3.0, the SDK tag version should be less than or equal to 7.0.3.0.
+    **NOTE:** The latest version compatible is preferred.
 
 ## Setup
 
