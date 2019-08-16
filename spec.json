@@ -11,7 +11,7 @@
       "bb_function": "blackbox_function_default",
       "multiout": false,
       "input_record_type": [],
-      "outputs": [],
+      "output_record_type": [],
       "env_vars": []
     },
     {

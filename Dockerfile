@@ -7,6 +7,11 @@
 #
 
 FROM python:3.6
+
+LABEL maintainer="support@kinetica.com"
+LABEL Description="Kinetica Machine Learning BlackBox SDK and starter examples."
+LABEL Author="Saif Ahmed"
+
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 
 # These utilities are only for debugging
