@@ -18,9 +18,9 @@ WORKDIR "/opt/gpudb/kml/bbx"
 
 # Install Required Libraries and Dependencies
 ADD requirements.txt  ./
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt --no-cache-dir
 
-# Add Kinetica BlackBox SDK (currently v7.0.5b)
+# Add Kinetica BlackBox SDK
 ADD bb_runner.sh ./
 ADD sdk ./sdk
 

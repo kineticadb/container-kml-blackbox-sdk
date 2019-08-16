@@ -1,142 +1,207 @@
 {
-    "name":"DOCKER_REPO",
-    "desc":"DOCKER_REPO",
-    "icon_uri":"https://kinetica.s3.amazonaws.com/kinetica/icons/icon-kml-byoc-ing.png",
-    "src_uri":"https://hub.docker.com/r/kinetica/kinetica-blackbox-sdk",
-    "functions":[
-       {
-          "name":"name",
-          "desc":"desc",
-          "bb_module":"bb_module_default",
-          "bb_function":"blackbox_function_default",
-          "input_record_type":[
- 
-          ],
-          "outputs":[
- 
-          ],
-          "multiout":false,
-          "env_vars":[
- 
-          ]
-       },
-       {
-          "name":"name",
-          "desc":"desc",
-          "bb_module":"bb_module_default",
-          "bb_function":"blackbox_function_math",
-          "input_record_type":[
-             {
-                "col_name":"figure1",
-                "col_type":"double"
-             },
-             {
-                "col_name":"figure2",
-                "col_type":"double"
-             },
-             {
-                "col_name":"mylabel",
-                "col_type":"string|char64"
-             }
-          ],
-          "output_record_type":[
-             {
-                "col_name":"sum",
-                "col_type":"double"
-             },
-             {
-                "col_name":"product",
-                "col_type":"double"
-             },
-             {
-                "col_name":"max",
-                "col_type":"double"
-             },
-             {
-                "col_name":"suminwords",
-                "col_type":"string|store_only"
-             }
-          ],
-          "multiout":false,
-          "env_vars":[
- 
-          ]
-       },
-       {
-          "name":"name",
-          "desc":"desc",
-          "bb_module":"bb_module_default",
-          "bb_function":"blackbox_function_math_multiout",
-          "input_record_type":[
-             {
-                "col_name":"figure1",
-                "col_type":"double"
-             },
-             {
-                "col_name":"figure2",
-                "col_type":"double"
-             },
-             {
-                "col_name":"mylabel",
-                "col_type":"string|char64"
-             }
-          ],
-          "output_record_type":[
-             {
-                "col_name":"operation",
-                "col_type":"string|store_only"
-             },
-             {
-                "col_name":"result",
-                "col_type":"double"
-             }
-          ],
-          "multiout":true,
-          "env_vars":[
- 
-          ]
-       },
-       {
-          "name":"name",
-          "desc":"desc",
-          "bb_module":"bb_module_default",
-          "bb_function":"blackbox_function_advanced_math",
-          "input_record_type":[
-             {
-                "col_name":"figure1",
-                "col_type":"double"
-             },
-             {
-                "col_name":"figure2",
-                "col_type":"double"
-             },
-             {
-                "col_name":"mylabel",
-                "col_type":"string|char64"
-             }
-          ],
-          "output_record_type":[
-             {
-                "col_name":"division",
-                "col_type":"double"
-             },
-             {
-                "col_name":"modulo",
-                "col_type":"long"
-             },
-             {
-                "col_name":"min",
-                "col_type":"double"
-             },
-             {
-                "col_name":"productinwords",
-                "col_type":"string|store_only"
-             }
-          ],
-          "multiout":false,
-          "env_vars":[
- 
-          ]
-       }
-    ]
- }
+  "name": "Kinetica BlackBox SDK: Trivial Example BlackBox functions",
+  "desc": "Kinetica BlackBox SDK: Trivial BlackBox functions demonstrating possible options and permutations",
+  "icon_uri": "https://kinetica.s3.amazonaws.com/icons/blackbox.png",
+  "src_uri": "https://hub.docker.com/r/kinetica/kinetica-blackbox-sdk",
+  "functions": [
+    {
+      "name": "Trivial Sample BlackBox function demonstrating function with no required params",
+      "desc": "Trivial Sample BlackBox function demonstrating function with no required params. Note that non-required parameters can still be passed through on the inbound dictionary.",
+      "bb_module": "bb_module_default",
+      "bb_function": "blackbox_function_default",
+      "multiout": false,
+      "input_record_type": [],
+      "outputs": [],
+      "env_vars": []
+    },
+    {
+      "name": "Trivial Sample BlackBox function demonstrating function with required params of different types",
+      "desc": "Trivial Sample BlackBox function demonstrating function with required params of different types.",
+      "bb_module": "bb_module_default",
+      "bb_function": "blackbox_function_math",
+      "multiout": false,
+      "input_record_type": [
+        {
+          "col_name": "figure1",
+          "col_type": "double",
+          "col_desc": "First figure for mathematical operations",
+          "col_default_val": "90210"
+        },
+        {
+          "col_name": "figure2",
+          "col_type": "double",
+          "col_desc": "Second figure for mathematical operations",
+          "col_default_val": "11215"
+        },
+        {
+          "col_name": "mylabel",
+          "col_type": "string|char64",
+          "col_desc": "Label for enhancing output",
+          "col_default_val": "The New Yorker"
+        }
+      ],
+      "output_record_type": [
+        {
+          "col_name": "sum",
+          "col_type": "double",
+          "col_desc": "Sum of input figures provided"
+        },
+        {
+          "col_name": "product",
+          "col_type": "double",
+          "col_desc": "Product of input figures provided"
+        },
+        {
+          "col_name": "max",
+          "col_type": "double",
+          "col_desc": "Maximum of two of input figures provided"
+        },
+        {
+          "col_name": "suminwords",
+          "col_type": "string|store_only",
+          "col_desc": "Sum of input figures provided with labeled flair"
+        }
+      ],
+      "env_vars": []
+    },
+    {
+      "name": "Trivial Sample BlackBox function demonstrating function with multiple output rows",
+      "desc": "Trivial Sample BlackBox function demonstrating function with multiple output rows. Performs the same operations as blackbox_function_math, but with multiple indexed output rows rather than wide outputs.",
+      "bb_module": "bb_module_default",
+      "bb_function": "blackbox_function_math_multiout",
+      "multiout": true,
+      "input_record_type": [
+        {
+          "col_name": "figure1",
+          "col_type": "double",
+          "col_desc": "First figure for mathematical operations",
+          "col_default_val": "90210"
+        },
+        {
+          "col_name": "figure2",
+          "col_type": "double",
+          "col_desc": "Second figure for mathematical operations",
+          "col_default_val": "11215"
+        },
+        {
+          "col_name": "mylabel",
+          "col_type": "string|char64",
+          "col_desc": "Label for enhancing output",
+          "col_default_val": "The New Yorker"
+        }
+      ],
+      "output_record_type": [
+        {
+          "col_name": "operation",
+          "col_type": "string|store_only",
+          "col_desc": "Description of operation performed"
+        },
+        {
+          "col_name": "result",
+          "col_type": "double",
+          "col_desc": "Result of mathematical operation performed"
+        }
+      ],
+      "env_vars": []
+    },
+    {
+      "name": "Trivial Sample BlackBox function demonstrating different operations with required params of different types",
+      "desc": "Trivial Sample BlackBox function demonstrating different operations (as compared to blackbox_function_math.) Meant to demonstrate co-existence of different functions in the same module, each independently callable.",
+      "bb_module": "bb_module_default",
+      "bb_function": "blackbox_function_advanced_math",
+      "multiout": false,
+      "input_record_type": [
+        {
+          "col_name": "figure1",
+          "col_type": "double",
+          "col_desc": "First figure for mathematical operations",
+          "col_default_val": "90210"
+        },
+        {
+          "col_name": "figure2",
+          "col_type": "double",
+          "col_desc": "Second figure for mathematical operations",
+          "col_default_val": "11215"
+        },
+        {
+          "col_name": "mylabel",
+          "col_type": "string|char64",
+          "col_desc": "Label for enhancing output",
+          "col_default_val": "The New Yorker"
+        }
+      ],
+      "output_record_type": [
+        {
+          "col_name": "division",
+          "col_type": "double",
+          "col_desc": "Division of input figures provided"
+        },
+        {
+          "col_name": "modulo",
+          "col_type": "double",
+          "col_desc": "Modulo of input figures provided"
+        },
+        {
+          "col_name": "min",
+          "col_type": "double",
+          "col_desc": "Minimum of two of input figures provided"
+        },
+        {
+          "col_name": "productinwords",
+          "col_type": "string|store_only",
+          "col_desc": "Product of input figures provided with labeled flair"
+        }
+      ],
+      "env_vars": []
+    },
+    {
+      "name": "Function with environment variables",
+      "desc": "Trivial Sample BlackBox function with two required parameters and two required environment variables",
+      "bb_module": "bb_module_default",
+      "bb_function": "blackbox_function_envvar_demo",
+      "multiout": false,
+      "input_record_type": [
+        {
+          "col_name": "figure1",
+          "col_type": "double"
+        },
+        {
+          "col_name": "figure2",
+          "col_type": "double"
+        }
+      ],
+      "output_record_type": [
+        {
+          "col_name": "sum",
+          "col_type": "double"
+        },
+        {
+          "col_name": "product",
+          "col_type": "double"
+        },
+        {
+          "col_name": "max",
+          "col_type": "double"
+        },
+        {
+          "col_name": "suminwords",
+          "col_type": "string|store_only"
+        }
+      ],
+      "env_vars": [
+        {
+          "var_name": "ENVVAR1",
+          "var_type": "string",
+          "var_desc": "Description for environment variable",
+          "var_default_val": "hello"
+        },
+        {
+          "var_name": "ENVVAR2",
+          "var_type": "string",
+          "var_desc": "Another description for yet another environment variable",
+          "var_default_val": "world"
+        }
+      ]
+    }
+  ]
+}
