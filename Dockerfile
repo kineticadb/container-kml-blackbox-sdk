@@ -7,6 +7,11 @@
 #
 
 FROM python:3.6
+
+LABEL maintainer="support@kinetica.com"
+LABEL Description="Kinetica Machine Learning BlackBox SDK and starter examples."
+LABEL Author="Saif Ahmed"
+
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 
 # These utilities are only for debugging
@@ -18,9 +23,9 @@ WORKDIR "/opt/gpudb/kml/bbx"
 
 # Install Required Libraries and Dependencies
 ADD requirements.txt  ./
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt --no-cache-dir
 
-# Add Kinetica BlackBox SDK (currently v7.0.5b)
+# Add Kinetica BlackBox SDK
 ADD bb_runner.sh ./
 ADD sdk ./sdk
 

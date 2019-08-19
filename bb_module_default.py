@@ -96,3 +96,22 @@ def blackbox_function_math_superslow(inMap):
         'suminwords': mylabel + " " + str(int(f1+f2))
         }
     return outMap     
+
+# BlackBox function to demonstrate intake of environment variables
+def blackbox_function_envvar_demo(inMap):
+    f1=int(inMap['figure1'])
+    f2=int(inMap['figure2'])
+
+    if 'ENVVAR1' not in os.environ:
+        raise Exception("Missing environment variable ENVVAR1")
+
+    if 'ENVVAR2' not in os.environ:
+        raise Exception("Missing environment variable ENVVAR2")
+
+    outMap = {
+        'sum':f1+f2, 
+        'product':f1*f2,
+        'max':max([f1,f2]),
+        'suminwords': f"{ENVVAR1} {f1+f2} {ENVVAR2}" 
+        }
+    return outMap
