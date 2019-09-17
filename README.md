@@ -218,7 +218,8 @@ The AAW UI offers a simpler WYSIWYG-style approach to importing a blackbox model
 
 1. Navigate to the AAW UI (`http://<aaw-host>:8070`)
 1. Click `Models + Analytics`.
-1. Click `+ Add Model` then `Import Blackbox`.
+1. Click `+ Add Model` then `New Blackbox`.
+1. Under `Create a Blackbox Model Manually`, click `Create`.
 1. Provide a `Model Name` and optional `Model Description`.
 1. Input the Docker URI for the container, e.g., `<repo_name>/<image_name>:<tag_name>`
 1. Input the `Module Name` and `Module Function`.
