@@ -1,25 +1,45 @@
 {
   "name": "Kinetica BlackBox SDK: Trivial Example BlackBox functions",
   "desc": "Kinetica BlackBox SDK: Trivial BlackBox functions demonstrating possible options and permutations",
-  "icon_uri": "https://kinetica.s3.amazonaws.com/icons/blackbox.png",
-  "src_uri": "https://hub.docker.com/r/kinetica/kinetica-blackbox-sdk",
+  "icon_uri": "https://kinetica-aaw-marketplace.s3.amazonaws.com/logos/appstore_logo_model.png",
+  "src_uri": "kinetica/kinetica-blackbox-sdk:r7.0.9",
+  "type": "BLACKBOX",
+
+  "industry": [],
+  "keywords": [],
+  "docs_url": "",
+  "api_url": "",
+  "is_featured": true,
+  "is_available": true,
+  "thumbnail_url": "",
+  "screenshot_urls": [],
+
   "functions": [
     {
       "name": "Trivial Sample BlackBox function demonstrating function with no required params",
       "desc": "Trivial Sample BlackBox function demonstrating function with no required params. Note that non-required parameters can still be passed through on the inbound dictionary.",
       "bb_module": "bb_module_default",
       "bb_function": "blackbox_function_default",
-      "multiout": false,
       "input_record_type": [],
       "output_record_type": [],
-      "env_vars": []
+      "env_vars": [],
+      "compute-support": ["CPU"]
+    },
+    {
+      "name": "Identity function",
+      "desc": "Identity function - what goes in must come out",
+      "bb_module": "bb_module_default",
+      "bb_function": "blackbox_function_identity",
+      "input_record_type": [],
+      "output_record_type": [],
+      "env_vars": [],
+      "compute-support": ["CPU"]
     },
     {
       "name": "Trivial Sample BlackBox function demonstrating function with required params of different types",
       "desc": "Trivial Sample BlackBox function demonstrating function with required params of different types.",
       "bb_module": "bb_module_default",
       "bb_function": "blackbox_function_math",
-      "multiout": false,
       "input_record_type": [
         {
           "col_name": "figure1",
@@ -62,14 +82,14 @@
           "col_desc": "Sum of input figures provided with labeled flair"
         }
       ],
-      "env_vars": []
+      "env_vars": [],
+      "compute-support": ["CPU"]
     },
     {
       "name": "Trivial Sample BlackBox function demonstrating function with multiple output rows",
       "desc": "Trivial Sample BlackBox function demonstrating function with multiple output rows. Performs the same operations as blackbox_function_math, but with multiple indexed output rows rather than wide outputs.",
       "bb_module": "bb_module_default",
       "bb_function": "blackbox_function_math_multiout",
-      "multiout": true,
       "input_record_type": [
         {
           "col_name": "figure1",
@@ -102,14 +122,14 @@
           "col_desc": "Result of mathematical operation performed"
         }
       ],
-      "env_vars": []
+      "env_vars": [],
+      "compute-support": ["CPU"]
     },
     {
       "name": "Trivial Sample BlackBox function demonstrating different operations with required params of different types",
       "desc": "Trivial Sample BlackBox function demonstrating different operations (as compared to blackbox_function_math.) Meant to demonstrate co-existence of different functions in the same module, each independently callable.",
       "bb_module": "bb_module_default",
       "bb_function": "blackbox_function_advanced_math",
-      "multiout": false,
       "input_record_type": [
         {
           "col_name": "figure1",
@@ -152,14 +172,14 @@
           "col_desc": "Product of input figures provided with labeled flair"
         }
       ],
-      "env_vars": []
+      "env_vars": [],
+      "compute-support": ["CPU"]
     },
     {
       "name": "Function with environment variables",
       "desc": "Trivial Sample BlackBox function with two required parameters and two required environment variables",
       "bb_module": "bb_module_default",
       "bb_function": "blackbox_function_envvar_demo",
-      "multiout": false,
       "input_record_type": [
         {
           "col_name": "figure1",
@@ -201,7 +221,8 @@
           "var_desc": "Another description for yet another environment variable",
           "var_default_val": "world"
         }
-      ]
+      ],
+      "compute-support": ["CPU"]
     }
   ]
 }
