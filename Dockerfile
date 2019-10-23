@@ -6,10 +6,10 @@
 # for support, contact Saif Ahmed (support@kinetica.com)
 #
 
-FROM python:3.6
+FROM rapidsai/rapidsai:cuda10.0-runtime-ubuntu16.04
 
 LABEL maintainer="support@kinetica.com"
-LABEL Description="Kinetica Machine Learning BlackBox SDK and starter examples."
+LABEL Description="Kinetica Machine Learning NVIDIA RAPIDS Inference Example with FIL (Forest Inferencing Library) on xgBoost Classifier"
 LABEL Author="Saif Ahmed"
 
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
