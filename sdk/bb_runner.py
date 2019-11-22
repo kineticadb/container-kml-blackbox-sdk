@@ -25,7 +25,9 @@ handlerC = logging.StreamHandler(sys.stdout)
 handlerC.setFormatter(formatter)
 logger.addHandler(handlerC)
 
-def validate_kml_api(api_base):
+
+
+def validate_kml_api(api_base, credentials):
 
     if api_base is None:
         logger.error(f"No valid KML API found ({api_base})")
@@ -38,7 +40,8 @@ def validate_kml_api(api_base):
     for waitsecs in wait_times:
 
         try:
-            r = requests.get(f"{api_base}/kml/ping")
+            r = requests.get(f"{api_base}/kml/ping",
+                             auth=credentials)
             if r.status_code == 200:
                 api_response = r.json()
                 if 'success' in api_response and r.json()['success']:
@@ -52,13 +55,14 @@ def validate_kml_api(api_base):
     logger.error(f"Could not connect to KML API {api_base}, exhausted tries. Giving up.")
     return False
 
-def get_dep_details(api_base, dep_id):
+def get_dep_details(api_base, dep_id, credentials):
     # TODO: Loop here atleast X times with longer waits 
     #   to ensure a blip in the RESP API doesnt kill the entire script
 
     dep_details_uri = f"{api_base}/kml/model/deployment/{dep_id}/view"
     logger.info(f"Obtaining deployment details from {dep_details_uri}")
-    dep_details_resp = requests.get(dep_details_uri)
+    dep_details_resp = requests.get(dep_details_uri,
+                                    auth=credentials)
     if (dep_details_resp.status_code == 404):
         logger.error(f"Could not find deployment with id {dep_id}")
         sys.exit(1)
@@ -136,6 +140,13 @@ if __name__ == '__main__':
     bbx_function = None
     db_table = None
 
+    # Container auth for api
+    credentials = None
+    if args.db_user and args.db_pass:
+        if args.db_user.lower() != 'no_cred':
+            credentials = (args.db_user, args.db_pass)
+    print(f'** cred: {credentials}')
+
     if args.deployment_id:
         logger.info("Obtaining inbound/outbound schema from KML REST API")
         logger.info(f"    Depl ID {args.deployment_id}")
@@ -162,13 +173,13 @@ if __name__ == '__main__':
             logger.error("Configured to obtain inbound/outbound schema from KML REST API...but encountered ambiguous db_table (results) command-line entry")
             sys.exit(1)
         
-        if not validate_kml_api(api_base = args.kml_api_base):
+        if not validate_kml_api(api_base=args.kml_api_base, credentials=credentials):
             logger.error("Unsuccessful reaching out to KML REST API")
             sys.exit(1)
         else:
             logger.info("Successfully connected to KML REST API")
 
-        bbx_module, bbx_function, schema_inbound, schema_outbound, db_table = get_dep_details(api_base = args.kml_api_base, dep_id = args.deployment_id)
+        bbx_module, bbx_function, schema_inbound, schema_outbound, db_table = get_dep_details(api_base=args.kml_api_base, dep_id=args.deployment_id, credentials=credentials)
 
 
     else:
