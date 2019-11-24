@@ -115,9 +115,6 @@ if __name__ == '__main__':
 
     parser.add_argument("--quiet", action="store_true", dest="be_quiet", help = "Reduce Standard Output logging")
 
-    # TODO: Environment variable pass-through of user/pass
-    # TODO: also pass thru db host and port
-
     args = parser.parse_args()  
 
     logger.info("Arguments interpreted and defaults applied as required")
@@ -141,11 +138,13 @@ if __name__ == '__main__':
     db_table = None
 
     # Container auth for api
-    credentials = None
     if args.db_user and args.db_pass:
         if args.db_user.lower() != 'no_cred':
             credentials = (args.db_user, args.db_pass)
-    print(f'** cred: {credentials}')
+        else:
+            credentials = None
+    else:
+        credentials = None
 
     if args.deployment_id:
         logger.info("Obtaining inbound/outbound schema from KML REST API")
