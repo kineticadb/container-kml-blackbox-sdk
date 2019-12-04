@@ -77,17 +77,13 @@ if __name__ == '__main__':
 
     # Things coming in from the environment via env-variables
     KML_API_BASE = grab_or_die("KML_API_BASE")
-    KML_DEPL_ID = grab_or_die("DEPL_ID")
+    KML_DEPL_ID = grab_or_die("KML_DEPL_ID")
     ZMQ_DEALER_HOST = grab_or_die("ZMQ_DEALER_HOST")
     ZMQ_DEALER_PORT = grab_or_die("ZMQ_DEALER_PORT")
     ZMQ_CONN_STR = f"tcp://{ZMQ_DEALER_HOST}:{ZMQ_DEALER_PORT}"
     DB_CONN_STR = grab_or_die("DB_CONN_STR")
     DB_USER = grab_or_die("DB_USER")
     DB_PASS = grab_or_die("DB_PASS")
-    BLACKBOX_FUNCTION = grab_or_die("BLACKBOX_FUNCTION")
-    BLACKBOX_MODULE = grab_or_die("BLACKBOX_MODULE")
-    DB_TABL_RESULTS = grab_or_die("DB_TABL_RESULTS")
-    DB_TABL_AUDIT = grab_or_die("DB_TABL_AUDIT")
 
     logger.info("Initializing KineticaBlackBox")
     logger.info(f"KML_API_BASE: {KML_API_BASE}")
@@ -104,10 +100,6 @@ if __name__ == '__main__':
             credentials = None
     else:
         credentials = None
-
-    context = zmq.Context()
-    socket = context.socket(zmq.PULL)
-    socket.connect(ZMQ_CONN_STR)
 
     # Things we default, but can capture in as environment variables
     be_quiet = True if (os.environ.get('be_quiet') and os.environ.get('be_quiet').upper()=="TRUE") else False
@@ -139,12 +131,12 @@ if __name__ == '__main__':
         logger.error(f"Could not find live deployment with id {KML_DEPL_ID}")
         sys.exit(1)
 
-    bb_module = BLACKBOX_MODULE
-    bb_method = BLACKBOX_FUNCTION
+    bb_module = dep_details["response"]["item"]["base_model_inst"]["model_inst_config"]["blackbox_module"]
+    bb_method = dep_details["response"]["item"]["base_model_inst"]["model_inst_config"]["blackbox_function"]
     schema_inbound = dep_details["response"]["item"]["model_dep_config"]["inp-tablemonitor"]["type_schema"]
-    tbl_out_results = DB_TABL_RESULTS
-    tbl_out_audit = DB_TABL_AUDIT
-    output_record_list = dep_details["response"]["item"]["base_model_inst"]["base_model"]["model_config"]["output_record_type"]
+    tbl_out_results = dep_details["response"]["item"]["model_dep_config"]["sink_table"]
+    tbl_out_audit = dep_details["response"]["item"]["model_dep_config"]["out-tablemonitor"]["table_name"]
+    output_record_list = dep_details["response"]["item"]["base_model_inst"]["model_inst_config"]["output_record_type"]
     outfields = [arec["col_name"] for arec in output_record_list]
 
     logger.info(f"bb_module: {bb_module}")
@@ -160,12 +152,7 @@ if __name__ == '__main__':
     method_to_call = getattr(__import__(bb_module), bb_method)
     logger.info(f"Dynamically loaded function {bb_method} from module {bb_module} for lambda application")
 
-
-    cn_db = get_conn_db(db_conn_str=DB_CONN_STR, db_user=DB_USER, db_pass=DB_PASS)
-    h_tbl_out_results = None
-    if tbl_out_results:
-        h_tbl_out_results = gpudb.GPUdbTable(name=tbl_out_results, db = cn_db)
-    sink_table_audit = gpudb.GPUdbTable(name=tbl_out_audit, db = cn_db)
+    hotpotatoes = 0
 
     block_request_count = 0
     response_count=0
@@ -175,8 +162,37 @@ if __name__ == '__main__':
         "errorstack": None
         }
 
+
+
+    # TODO Put these connection activities into a higher-level giant try-catch
+    #    to re-connect upon failures
+    # In case of a ZMQ connection failure
+    context = zmq.Context()
+    socket = context.socket(zmq.PULL)
+    socket.connect(ZMQ_CONN_STR)
+
+    # Prepare DB Connection
+    cn_db = get_conn_db(DB_CONN_STR, DB_USER, DB_PASS)
+
+    # [Re]Establish table handles
+    h_tbl_out_audit = gpudb.GPUdbTable(name = tbl_out_audit, db = cn_db)
+    h_tbl_out_results = None
+    logger.info(f"DB Results Table {tbl_out_results}")
+    if tbl_out_results and tbl_out_results != "NOT_APPLICABLE":
+        h_tbl_out_results = gpudb.GPUdbTable(name = tbl_out_results, db = cn_db)
+        logger.info(f"Established connection to sink table")
+        logger.info(f"All results will be persisted to both Audit {tbl_out_audit} and output DB Tables {tbl_out_results}")
+    else:
+        logger.info(f"All results will be persisted to Audit DB Table {tbl_out_audit} only")
+
+
+
+
     while True:
+
         try:
+            logger.info("Awaiting inbound requests")
+
             mpr = socket.recv_multipart()
             block_request_count += 1
 
@@ -202,7 +218,7 @@ if __name__ == '__main__':
                 results_package_list[mindex]["process_end_dt"] = process_end_dt
                 results_package_list[mindex]["success"]=1
 
-            _ = sink_table_audit.insert_records(results_package_list)
+            _ = h_tbl_out_audit.insert_records(results_package_list)
             if h_tbl_out_results is None:
                 logger.info(f"Response sent back to DB audit table")
             else:
@@ -226,4 +242,5 @@ if __name__ == '__main__':
 
     # TODO: Really, we should *never* exit. So if we exit, that is a failure already
     # The only "exit" would be if we are terminated externally via REST API
+    logger.warn("Exiting container. Hopefully this was user-initiated from REST API.")
     sys.exit(1)
