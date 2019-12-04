@@ -77,13 +77,17 @@ if __name__ == '__main__':
 
     # Things coming in from the environment via env-variables
     KML_API_BASE = grab_or_die("KML_API_BASE")
-    KML_DEPL_ID = grab_or_die("KML_DEPL_ID")
+    KML_DEPL_ID = grab_or_die("DEPL_ID")
     ZMQ_DEALER_HOST = grab_or_die("ZMQ_DEALER_HOST")
     ZMQ_DEALER_PORT = grab_or_die("ZMQ_DEALER_PORT")
     ZMQ_CONN_STR = f"tcp://{ZMQ_DEALER_HOST}:{ZMQ_DEALER_PORT}"
     DB_CONN_STR = grab_or_die("DB_CONN_STR")
     DB_USER = grab_or_die("DB_USER")
     DB_PASS = grab_or_die("DB_PASS")
+    BLACKBOX_FUNCTION = grab_or_die("BLACKBOX_FUNCTION")
+    BLACKBOX_MODULE = grab_or_die("BLACKBOX_MODULE")
+    DB_TABL_RESULTS = grab_or_die("DB_TABL_RESULTS")
+    DB_TABL_AUDIT = grab_or_die("DB_TABL_AUDIT")
 
     logger.info("Initializing KineticaBlackBox")
     logger.info(f"KML_API_BASE: {KML_API_BASE}")
@@ -100,6 +104,10 @@ if __name__ == '__main__':
             credentials = None
     else:
         credentials = None
+
+    context = zmq.Context()
+    socket = context.socket(zmq.PULL)
+    socket.connect(ZMQ_CONN_STR)
 
     # Things we default, but can capture in as environment variables
     be_quiet = True if (os.environ.get('be_quiet') and os.environ.get('be_quiet').upper()=="TRUE") else False
@@ -154,93 +162,107 @@ if __name__ == '__main__':
 
     hotpotatoes = 0
 
-    block_request_count = 0
-    response_count=0
-    default_results_subdict={
-        "success":0,
-        "errorlog": None,
-        "errorstack": None
-        }
-
-
-
-    # TODO Put these connection activities into a higher-level giant try-catch
-    #    to re-connect upon failures
-    # In case of a ZMQ connection failure
-    context = zmq.Context()
-    socket = context.socket(zmq.PULL)
-    socket.connect(ZMQ_CONN_STR)
-
-    # Prepare DB Connection
-    cn_db = get_conn_db(DB_CONN_STR, DB_USER, DB_PASS)
-
-    # [Re]Establish table handles
-    h_tbl_out_audit = gpudb.GPUdbTable(name = tbl_out_audit, db = cn_db)
-    h_tbl_out_results = None
-    logger.info(f"DB Results Table {tbl_out_results}")
-    if tbl_out_results and tbl_out_results != "NOT_APPLICABLE":
-        h_tbl_out_results = gpudb.GPUdbTable(name = tbl_out_results, db = cn_db)
-        logger.info(f"Established connection to sink table")
-        logger.info(f"All results will be persisted to both Audit {tbl_out_audit} and output DB Tables {tbl_out_results}")
-    else:
-        logger.info(f"All results will be persisted to Audit DB Table {tbl_out_audit} only")
+    try:
 
 
 
 
-    while True:
+        while True:
 
-        try:
+        # Prepare DB Connection
+        cn_db = get_conn_db(DB_CONN_STR, DB_USER, DB_PASS)
+
+        # [Re]Establish table handles
+        h_tbl_out_audit = gpudb.GPUdbTable(name = tbl_out_audit, db = cn_db)
+        h_tbl_out_results = None
+        logger.info(f"DB Results Table {tbl_out_results}")
+        if tbl_out_results and tbl_out_results != "NOT_APPLICABLE":
+            h_tbl_out_results = gpudb.GPUdbTable(name = tbl_out_results, db = cn_db)
+            logger.info(f"Established connection to sink table")
+            logger.info(f"All results will be persisted to both Audit {tbl_out_audit} and output DB Tables {tbl_out_results}")
+        else:
+            logger.info(f"All results will be persisted to Audit DB Table {tbl_out_audit} only")
+
             logger.info("Awaiting inbound requests")
 
-            mpr = socket.recv_multipart()
-            block_request_count += 1
-
+            mpr = cn_zmq.recv_multipart()
             parts_received = len(mpr)
-            logger.info(f"Processing insert notification with {parts_received-1} frames, block request {block_request_count}")
+            hotpotatoes += 1
+            logger.info(f"Received inbound request number {hotpotatoes} from dealer with {parts_received} items")
 
-            results_package_list = gpudb.GPUdbRecord.decode_binary_data(schema_decoder, mpr[1:])
-            process_start_dt = datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
-            receive_dt = datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
-            for mindex, results_package in enumerate(results_package_list):
-                response_count += 1
-                results_package_list[mindex].update(default_results_subdict)
-                results_package_list[mindex]["process_start_dt"] = process_start_dt
-                results_package_list[mindex]["process_end_dt"]=None
-                if 'guid' not in results_package_list[mindex]:
-                    results_package_list[mindex]['guid'] = str(uuid.uuid4())
-                    results_package_list[mindex]['receive_dt'] = receive_dt
-            outMaps = method_to_call(results_package_list)
+            infer_q=[]
+            for mindex, m in enumerate(mpr[1:]):
 
-            process_end_dt = datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
-            for mindex, results_package in enumerate(results_package_list):
-                results_package_list[mindex].update(outMaps[mindex])
-                results_package_list[mindex]["process_end_dt"] = process_end_dt
-                results_package_list[mindex]["success"]=1
+                # TODO: Determine whether we can decode the entire array at once, rather than member-by-member
+                inference_inbound_payload=gpudb.GPUdbRecord.decode_binary_data(schema_decoder, m)[0]
 
-            _ = h_tbl_out_audit.insert_records(results_package_list)
-            if h_tbl_out_results is None:
-                logger.info(f"Response sent back to DB audit table")
-            else:
-                _ = h_tbl_out_results.insert_records(results_package_list)
-                logger.info(f"Response sent back to DB output table and audit table")
+                # wipe out all previous results
+                results_package = None # TODO: is this necessary given the below?
+                # by default send back all inputs as well as our calculated outputs
+                # TODO: Remove binary fields, as those could be huge and duplication is not desirable
+                results_package = copy.deepcopy(inference_inbound_payload)
 
-            # TODO: examine insert_status and determine if DB insert was a filure
+                results_package["success"]=0 # we start with the assumption of failure
+                results_package["errorstack"]=None
+                results_package["errorlog"]=None
 
-            logger.info(f"Completed Processing block request {block_request_count}")
+                for o in outfields:
+                    results_package[o]=None
 
-        except Exception as e:
-            # TODO: As discussed at code review on 3 Jan 2019, push stack trace and input body to store_only field in output table
-            logger.error(e)
-            error_type, error, tb = sys.exc_info()
-            logger.error(traceback.format_tb(tb))
-            traceback.print_exc(file=sys.stdout)
+                process_start_dt=datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
+                results_package["process_start_dt"]=process_start_dt
 
+                try:
+                    outMaps = method_to_call(inference_inbound_payload)
+                    results_package["success"]=1
+                    process_end_dt=datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
+                    results_package["process_end_dt"]=process_end_dt
+
+                    for outMap in outMaps:
+                        lineitem = copy.deepcopy(results_package)
+                        for k,v in outMap.items():
+                            lineitem[k]=v
+                        infer_q.append(lineitem)
+
+                        if not be_quiet:
+                            logger.debug ("\tResults received from blackbox:")
+                            # TODO: Only do this for non-binary fields and non-store-only fields
+                            for ko,vo in outMap.items():
+                                logger.debug("\t %s: %s" % (ko,vo))
+                            logger.debug ("\t>> Completed")
+
+                except Exception as e:
+                    logger.error(e)
+                    error_type, error, tb = sys.exc_info()
+                    logger.error(traceback.format_tb(tb))
+                    traceback.print_exc(file=sys.stdout)
+                    results_package["errorstack"]="\n".join(traceback.format_tb(tb))
+                    if e:
+                        results_package["errorlog"]=str(e)
+                    process_end_dt=datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
+                    results_package["process_end_dt"]=process_end_dt
+                    infer_q.append(results_package)
+
+            # TODO: Check to ensure persist was successful, otherwise, keep trying and eventually fail+reconnect
+            _ = h_tbl_out_audit.insert_records(infer_q)
+            if tbl_out_results and tbl_out_results != "NOT_APPLICABLE":
+                _ = h_tbl_out_results.insert_records(infer_q)
+
+            logger.info(f"Completed Processing block request {hotpotatoes} with {parts_received} parts")
+
+    except Exception as e:
+        # TODO: Send some distress signal back to REST API
+        # If we continuously get here, there is a problem
+        logger.error("Problems initializing relay pipeline")
+        logger.error(e)
+        logger.debug(traceback.format_exc())
+
+        # Wait briefly, then re-try establishing connections
+        time.sleep(2)
 
 if __name__ == '__main__':
     main()
 
     # TODO: Really, we should *never* exit. So if we exit, that is a failure already
     # The only "exit" would be if we are terminated externally via REST API
-    logger.warn("Exiting container. Hopefully this was user-initiated from REST API.")
     sys.exit(1)
