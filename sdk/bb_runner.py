@@ -97,9 +97,11 @@ def register_event_lifecycle(api_base, credentials, event_sub_type):
         logger.error(traceback.format_tb(tb))
         traceback.print_exc(file=sys.stdout)
 
-def register_event_metrics(api_base, credentials, recs_received=None, recs_inf_success=None, recs_inf_failure=None, recs_inf_persisted=None, throughput_inf=None, throughput_e2e=None):
+def register_event_metrics(api_base, credentials, seq_id=None, recs_received=None, recs_inf_success=None, recs_inf_failure=None, recs_inf_persisted=None, throughput_inf=None, throughput_e2e=None):
 
     payload = {
+        "event_type": "METRICS",
+        "seq_id": seq_id,
         "recs_received": recs_received,
         "recs_inf_success": recs_inf_success,
         "recs_inf_failure": recs_inf_failure,
@@ -313,14 +315,27 @@ if __name__ == '__main__':
 
         else:
 
+            # Reset all metrics until we get the next batch
+            seq_id = None
+            recs_received = None
+            recs_inf_success = None
+            recs_inf_failure = None
+            recs_inf_persisted = None
+            throughput_inf = None
+            throughput_e2e = None
+
             try:
                 logger.info("Awaiting inbound requests")
 
                 mpr = socket.recv_multipart()
                 block_request_count += 1
+                seq_id = block_request_count
+
+                t_start_e2e = time.time()
 
                 parts_received = len(mpr)
                 logger.info(f"Received inbound request number {block_request_count} with {parts_received-1} frames")
+                recs_received = parts_received-1
                 #logger.info(f"Processing insert notification with {parts_received-1} frames, block request {block_request_count}")
 
                 results_package_list = gpudb.GPUdbRecord.decode_binary_data(schema_decoder, mpr[1:])
@@ -330,11 +345,14 @@ if __name__ == '__main__':
                     results_package_list[mindex].update(default_results_subdict)
                     results_package_list[mindex]["process_start_dt"] = process_start_dt
 
+                recs_inf_failure = 0
+                t_start_inf = time.time()
                 for mindex, results_package in enumerate(results_package_list):
                     try:
                         outMap = method_to_call(results_package_list[mindex])
                         if not isinstance(outMap, list):
-                            logger.warn ("Received lone dictionary function output, force listifying")
+                            # TODO: Consider force exceptioning on this case and forcing users to fix this
+                            #logger.warn ("Received lone dictionary function output, force listifying")
                             outMap = [outMap,]
 
                         # Protected fields cannot be overwritten by blackbox function
@@ -346,6 +364,7 @@ if __name__ == '__main__':
                         results_package_list[mindex].update(outMap[0])
                         results_package_list[mindex]["success"]=1
                     except Exception as e:
+                        recs_inf_failure += 1
                         logger.error(e)
                         error_type, error, tb = sys.exc_info()
                         logger.error(traceback.format_tb(tb))
@@ -354,6 +373,7 @@ if __name__ == '__main__':
                         if e:
                             results_package_list[mindex]["errorlog"]=str(e)
                     results_package_list[mindex]["process_end_dt"] = datetime.datetime.now().isoformat(' ')[:-3]
+                t_end_inf = time.time()
 
                 _ = h_tbl_out_audit.insert_records(results_package_list)
                 if h_tbl_out_results is None:
@@ -361,10 +381,18 @@ if __name__ == '__main__':
                 else:
                     _ = h_tbl_out_results.insert_records(results_package_list)
                     logger.info(f"Response sent back to DB output table and audit table")
+                t_end_e2e = time.time()
+
+                # TODO: actually grab this from insert_records return values, dont assume
+                recs_inf_persisted = len(results_package_list)
+                recs_inf_success = recs_received - recs_inf_failure
+
+                throughput_inf = recs_received/(t_end_inf-t_start_inf)
+                throughput_e2e = recs_received/(t_end_e2e-t_start_e2e)
 
                 # TODO: examine insert_status and determine if DB insert was a filure
 
-                logger.info(f"Completed Processing block request {block_request_count}")
+                logger.info(f"Completed Processing block request {block_request_count} with throughput {throughput_inf:.7f} inf-per-sec and {throughput_e2e:.7f} e2e-per-sec")
 
             except Exception as e:
                 # TODO: As discussed at code review on 3 Jan 2019, push stack trace and input body to store_only field in output table
@@ -372,6 +400,8 @@ if __name__ == '__main__':
                 error_type, error, tb = sys.exc_info()
                 logger.error(traceback.format_tb(tb))
                 traceback.print_exc(file=sys.stdout)
+
+            register_event_metrics(KML_API_BASE, credentials, seq_id, recs_received, recs_inf_success, recs_inf_failure, recs_inf_persisted, throughput_inf, throughput_e2e)
 
 if __name__ == '__main__':
     main()
