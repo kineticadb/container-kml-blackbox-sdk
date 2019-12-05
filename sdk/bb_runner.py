@@ -24,12 +24,16 @@ handlerC = logging.StreamHandler(sys.stdout)
 handlerC.setFormatter(formatter)
 logger.addHandler(handlerC)
 
-DEFAULT_EVENT_SIG = {
-    "deployment_id": os.environ.get("KML_DEPL_ID"), # e.g.: 187,
-    "deployment_name": None, # e.g.: "kml-bbx-00187",
-    "k8s_replicaset": None, # e.g.: "kml-bbx-00187-5585ff96d7",
-    "k8s_pod_name": None, # e.g.: "kml-bbx-00187-5585ff96d7-gh7fh",
-    }
+# Build event signature
+env_pod_name = os.environ.get('HOSTNAME')
+env_dep_id = os.environ.get('KML_DEPL_ID')
+pt = env_pod_name.split('-')
+dep_name = '-'.join([pt[0], pt[1], pt[2]])
+
+DEFAULT_EVENT_SIG = {"deployment_id": env_dep_id,
+                     "deployment_name": dep_name,
+                     "k8s_pod_name": env_pod_name}
+
 
 # Grab environment variables or die trying
 def grab_or_die(env_var_key):
@@ -37,6 +41,7 @@ def grab_or_die(env_var_key):
         logger.error(f"Could not find {env_var_key} environment variable. Cannot proceed.")
         sys.exit(1)
     return os.environ[env_var_key]
+
 
 def get_conn_db(db_conn_str, db_user, db_pass):
     # Prepare DB Communications
@@ -50,6 +55,7 @@ def get_conn_db(db_conn_str, db_user, db_pass):
                        username=db_user,
                        password=db_pass)
     return cn_db
+
 
 def validate_kml_api(api_base, credentials):
 
@@ -79,12 +85,14 @@ def validate_kml_api(api_base, credentials):
     logger.error(f"Could not connect to KML API {api_base}, exhausted tries. Giving up.")
     return False
 
+
 def register_event_lifecycle(api_base, credentials, event_sub_type):
 
     payload = {
         "event_type": "LIFECYCLE",
-        "event_sub_type": event_sub_type
+        "event_sub_type": event_sub_type,
         }
+
     payload.update(DEFAULT_EVENT_SIG)
 
     try:
@@ -96,6 +104,7 @@ def register_event_lifecycle(api_base, credentials, event_sub_type):
         error_type, error, tb = sys.exc_info()
         logger.error(traceback.format_tb(tb))
         traceback.print_exc(file=sys.stdout)
+
 
 def register_event_metrics(api_base, credentials, seq_id=None, recs_received=None, recs_inf_success=None, recs_inf_failure=None, recs_inf_persisted=None, throughput_inf=None, throughput_e2e=None):
 
@@ -109,6 +118,7 @@ def register_event_metrics(api_base, credentials, seq_id=None, recs_received=Non
         "throughput_inf": throughput_inf,
         "throughput_e2e": throughput_e2e
         }
+
     payload.update(DEFAULT_EVENT_SIG)
 
     try:
@@ -120,6 +130,7 @@ def register_event_metrics(api_base, credentials, seq_id=None, recs_received=Non
         error_type, error, tb = sys.exc_info()
         logger.error(traceback.format_tb(tb))
         traceback.print_exc(file=sys.stdout)
+
 
 if __name__ == '__main__':
 
@@ -390,7 +401,7 @@ if __name__ == '__main__':
                 throughput_inf = recs_received/(t_end_inf-t_start_inf)
                 throughput_e2e = recs_received/(t_end_e2e-t_start_e2e)
 
-                # TODO: examine insert_status and determine if DB insert was a filure
+                # TODO: examine insert_status and determine if DB insert was a failure
 
                 logger.info(f"Completed Processing block request {block_request_count} with throughput {throughput_inf:.7f} inf-per-sec and {throughput_e2e:.7f} e2e-per-sec")
 
@@ -401,7 +412,16 @@ if __name__ == '__main__':
                 logger.error(traceback.format_tb(tb))
                 traceback.print_exc(file=sys.stdout)
 
-            register_event_metrics(KML_API_BASE, credentials, seq_id, recs_received, recs_inf_success, recs_inf_failure, recs_inf_persisted, throughput_inf, throughput_e2e)
+            register_event_metrics(KML_API_BASE,
+                                   credentials,
+                                   seq_id,
+                                   recs_received,
+                                   recs_inf_success,
+                                   recs_inf_failure,
+                                   recs_inf_persisted,
+                                   throughput_inf,
+                                   throughput_e2e)
+
 
 if __name__ == '__main__':
     main()
