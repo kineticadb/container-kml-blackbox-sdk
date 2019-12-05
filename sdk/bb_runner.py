@@ -24,6 +24,12 @@ handlerC = logging.StreamHandler(sys.stdout)
 handlerC.setFormatter(formatter)
 logger.addHandler(handlerC)
 
+DEFAULT_EVENT_SIG = {
+    "deployment_id": None, # e.g.: 187,
+    "deployment_name": None, # e.g.: "kml-bbx-00187",
+    "k8s_replicaset": None, # e.g.: "kml-bbx-00187-5585ff96d7",
+    "k8s_pod_name": None, # e.g.: "kml-bbx-00187-5585ff96d7-gh7fh",
+    }
 
 # Grab environment variables or die trying
 def grab_or_die(env_var_key):
@@ -72,6 +78,46 @@ def validate_kml_api(api_base, credentials):
 
     logger.error(f"Could not connect to KML API {api_base}, exhausted tries. Giving up.")
     return False
+
+def register_event_lifecycle(api_base, credentials, event_sub_type):
+
+    payload = {
+        "event_type": "LIFECYCLE",
+        "event_sub_type": event_sub_type
+        }
+    payload.update(default_results_subdict)
+
+    try:
+        r = requests.post(f"{api_base}/admin/events/register", auth=credentials, json=payload)
+
+    except Exception as e:
+        logger.error(e)
+        logger.error(payload)
+        error_type, error, tb = sys.exc_info()
+        logger.error(traceback.format_tb(tb))
+        traceback.print_exc(file=sys.stdout)
+
+def register_event_metrics(api_base, credentials, recs_received=None, recs_inf_success=None, recs_inf_failure=None, recs_inf_persisted=None, throughput_inf=None, throughput_e2e=None):
+
+    payload = {
+        "recs_received": recs_received,
+        "recs_inf_success": recs_inf_success,
+        "recs_inf_failure": recs_inf_failure,
+        "recs_inf_persisted": recs_inf_persisted,
+        "throughput_inf": throughput_inf,
+        "throughput_e2e": throughput_e2e
+        }
+    payload.update(default_results_subdict)
+
+    try:
+        r = requests.post(f"{api_base}/admin/events/register", auth=credentials, json=payload)
+
+    except Exception as e:
+        logger.error(e)
+        logger.error(payload)
+        error_type, error, tb = sys.exc_info()
+        logger.error(traceback.format_tb(tb))
+        traceback.print_exc(file=sys.stdout)
 
 if __name__ == '__main__':
 
