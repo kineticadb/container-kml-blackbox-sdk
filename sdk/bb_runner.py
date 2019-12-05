@@ -150,13 +150,14 @@ if __name__ == '__main__':
     logger.info(f"Output fields: {len(outfields)}")
     for outf in outfields:
         logger.info(f"   Output field: {outf}")
-    protected_fields = outfields + ["guid", "receive_dt", "process_start_dt", "process_end_dt"]
+
+    protected_fields = ["guid", "receive_dt", "process_start_dt", "process_end_dt"]
+    # TODO: also protect input fields
+    #protected_fields = infields + ["guid", "receive_dt", "process_start_dt", "process_end_dt"]
 
     schema_decoder = json.dumps(schema_inbound) #json.loads(json.dumps(schema_inbound))
     method_to_call = getattr(__import__(bb_module), bb_method)
     logger.info(f"Dynamically loaded function {bb_method} from module {bb_module} for lambda application")
-
-    hotpotatoes = 0
 
     block_request_count = 0
     response_count=0
@@ -166,6 +167,8 @@ if __name__ == '__main__':
         "errorstack": None,
         "process_end_dt": None
         }
+    for outf in outfields:
+        default_results_subdict[outf]=None
 
     # TODO Put these connection activities into a higher-level giant try-catch
     #    to re-connect upon failures
@@ -211,16 +214,15 @@ if __name__ == '__main__':
                     response_count += 1
                     results_package_list[mindex].update(default_results_subdict)
                     results_package_list[mindex]["process_start_dt"] = process_start_dt
-                    results_package_list[mindex]["process_end_dt"]=None
 
                 outMaps = method_to_call(results_package_list)
 
                 process_end_dt = datetime.datetime.now().isoformat(' ')[:-3]
                 for mindex, results_package in enumerate(results_package_list):
                     # Protected fields cannot be overwritten by blackbox function
-                    #for pf in protected_fields:
-                    #    if pf in outMaps[mindex]:
-                    #        outMaps[mindex].pop(pf)
+                    for pf in protected_fields:
+                        if pf in outMaps[mindex]:
+                            outMaps[mindex].pop(pf)
 
                     results_package_list[mindex].update(outMaps[mindex])
                     results_package_list[mindex]["process_end_dt"] = process_end_dt
@@ -271,10 +273,10 @@ if __name__ == '__main__':
                     try:
                         outMap = method_to_call(results_package_list[mindex])
                         # Protected fields cannot be overwritten by blackbox function
-                        #for pf in protected_fields:
-                        #    if pf in outMap:
-                        #        outMap.pop(pf)
-                        results_package_list[mindex].update(outMap)
+                        for pf in protected_fields:
+                            if pf in outMap:
+                                outMap.pop(pf)
+                        results_package_list[mindex].update(outMap[0])
                         results_package_list[mindex]["success"]=1
                     except Exception as e:
                         logger.error(e)
