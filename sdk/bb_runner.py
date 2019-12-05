@@ -272,10 +272,16 @@ if __name__ == '__main__':
                 for mindex, results_package in enumerate(results_package_list):
                     try:
                         outMap = method_to_call(results_package_list[mindex])
+                        if not isinstance(outMap, list):
+                            logger.warn ("Received lone dictionary function output, force listifying")
+                            outMap = [outMap,]
+
                         # Protected fields cannot be overwritten by blackbox function
                         for pf in protected_fields:
-                            if pf in outMap:
+                            if _ in outMap:
                                 outMap.pop(pf)
+
+                        # TODO: Problem! This doesnt handle multi-out case!
                         results_package_list[mindex].update(outMap[0])
                         results_package_list[mindex]["success"]=1
                     except Exception as e:
