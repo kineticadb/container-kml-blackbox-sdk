@@ -25,7 +25,7 @@ handlerC.setFormatter(formatter)
 logger.addHandler(handlerC)
 
 DEFAULT_EVENT_SIG = {
-    "deployment_id": None, # e.g.: 187,
+    "deployment_id": os.environ.get("KML_DEPL_ID"), # e.g.: 187,
     "deployment_name": None, # e.g.: "kml-bbx-00187",
     "k8s_replicaset": None, # e.g.: "kml-bbx-00187-5585ff96d7",
     "k8s_pod_name": None, # e.g.: "kml-bbx-00187-5585ff96d7-gh7fh",
@@ -85,7 +85,7 @@ def register_event_lifecycle(api_base, credentials, event_sub_type):
         "event_type": "LIFECYCLE",
         "event_sub_type": event_sub_type
         }
-    payload.update(default_results_subdict)
+    payload.update(DEFAULT_EVENT_SIG)
 
     try:
         r = requests.post(f"{api_base}/admin/events/register", auth=credentials, json=payload)
@@ -107,7 +107,7 @@ def register_event_metrics(api_base, credentials, recs_received=None, recs_inf_s
         "throughput_inf": throughput_inf,
         "throughput_e2e": throughput_e2e
         }
-    payload.update(default_results_subdict)
+    payload.update(DEFAULT_EVENT_SIG)
 
     try:
         r = requests.post(f"{api_base}/admin/events/register", auth=credentials, json=payload)
@@ -158,11 +158,16 @@ if __name__ == '__main__':
         credentials = None
         logger.info("   DB Connection will be w/o authentication (debug mode)")
 
+
+    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="INITIALIZING")
+
+
     # Things we default, but can capture in as environment variables
     be_quiet = True if (os.environ.get('be_quiet') and os.environ.get('be_quiet').upper()=="TRUE") else False
     if be_quiet:
         logger.setLevel(logging.ERROR)
 
+    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="DEP_DETAILS_OBTAINING")
     dep_details_uri = f"{KML_API_BASE}/model/deployment/{KML_DEPL_ID}/view"
     logger.info(f"Deployment details from {dep_details_uri}, attempting connection...")
     if not validate_kml_api(KML_API_BASE, credentials):
@@ -180,6 +185,8 @@ if __name__ == '__main__':
         logger.error(f"Could not find live deployment with id {KML_DEPL_ID}")
         sys.exit(1)
 
+    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="DEP_DETAILS_RECEIVED")
+
     bb_module = dep_details["response"]["item"]["base_model_inst"]["model_inst_config"]["blackbox_module"]
     bb_method = dep_details["response"]["item"]["base_model_inst"]["model_inst_config"]["blackbox_function"]
     schema_inbound = dep_details["response"]["item"]["model_dep_config"]["inp-tablemonitor"]["type_schema"]
@@ -187,6 +194,8 @@ if __name__ == '__main__':
     tbl_out_audit = dep_details["response"]["item"]["model_dep_config"]["out-tablemonitor"]["table_name"]
     output_record_list = dep_details["response"]["item"]["base_model_inst"]["model_inst_config"]["output_record_type"]
     outfields = [arec["col_name"] for arec in output_record_list]
+
+    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="DEP_DETAILS_PROCESSED")
 
     logger.info(f"bb_module: {bb_module}")
     logger.info(f"bb_method: {bb_method}")
@@ -219,12 +228,16 @@ if __name__ == '__main__':
     # TODO Put these connection activities into a higher-level giant try-catch
     #    to re-connect upon failures
     # In case of a ZMQ connection failure
+    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="ZMQ_CONNECTING")
     context = zmq.Context()
     socket = context.socket(zmq.PULL)
     socket.connect(ZMQ_CONN_STR)
+    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="ZMQ_CONNECTED")
 
     # Prepare DB Connection
+    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="DB_CONNECTING")
     cn_db = get_conn_db(DB_CONN_STR, DB_USER, DB_PASS)
+    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="DB_CONNECTED")
 
     # [Re]Establish table handles
     h_tbl_out_audit = gpudb.GPUdbTable(name = tbl_out_audit, db = cn_db)
@@ -237,6 +250,8 @@ if __name__ == '__main__':
     else:
         logger.info(f"All results will be persisted to Audit DB Table {tbl_out_audit} only")
 
+
+    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="READY_TO_INFER")
     while True:
 
         ################################################
