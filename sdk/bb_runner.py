@@ -278,8 +278,8 @@ if __name__ == '__main__':
 
                         # Protected fields cannot be overwritten by blackbox function
                         for pf in protected_fields:
-                            if _ in outMap:
-                                outMap.pop(pf)
+                            if pf in outMap[0]:
+                                outMap[0].pop(pf)
 
                         # TODO: Problem! This doesnt handle multi-out case!
                         results_package_list[mindex].update(outMap[0])
