@@ -17,7 +17,7 @@ import gpudb
 import requests
 from requests.exceptions import ConnectionError
 
-logger = logging.getLogger("kml-bbox-sdk")
+logger = logging.getLogger("kml-bbx-sdk")
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handlerC = logging.StreamHandler(sys.stdout)
@@ -75,6 +75,8 @@ def validate_kml_api(api_base, credentials):
 
 if __name__ == '__main__':
 
+    logger.info("Initializing Kinetica BlackBox SDK")
+
     # Things coming in from the environment via env-variables
     KML_API_BASE = grab_or_die("KML_API_BASE")
     KML_DEPL_ID = grab_or_die("KML_DEPL_ID")
@@ -88,51 +90,45 @@ if __name__ == '__main__':
     BLACKBOX_MULTIROW_INFER = False
     if "BLACKBOX_MULTIROW_INFER" in os.environ and os.environ["BLACKBOX_MULTIROW_INFER"].lower().strip()=="true":
         BLACKBOX_MULTIROW_INFER = True
-        logger.info("Employing Multi-Row Infer")
+        logger.info("   Employing Multi-Row Infer")
     else:
-        logger.info("Employing Single-Row (Traditional Mode) Infer")
+        logger.info("   Employing Single-Row (Traditional Mode) Infer")
 
-    logger.info("Initializing KineticaBlackBox")
-    logger.info(f"KML_API_BASE: {KML_API_BASE}")
-    logger.info(f"ZMQ_CONN_STR: {ZMQ_CONN_STR}")
-    logger.info(f"DB_CONN_STR: {DB_CONN_STR}")
-    logger.info(f"DB_USER: {DB_USER}")
-    logger.info(f"DB_PASS: *******")
+    logger.info(f"   KML_API_BASE: {KML_API_BASE}")
+    logger.info(f"   DB_CONN_STR: {DB_CONN_STR}")
+    logger.info(f"   DB_USER: {DB_USER}")
+    logger.info(f"   DB_PASS: *******")
+    logger.info(f"   ZMQ_CONN_STR: {ZMQ_CONN_STR}")
 
     # Container auth for api
     if DB_USER and DB_PASS:
         if DB_USER.lower() != 'no_cred':
             credentials = (DB_USER, DB_PASS)
+            logger.info("   DB Connection will be authenticated")
         else:
             credentials = None
+            logger.info("   DB Connection will be w/o authentication (debug mode)")
     else:
         credentials = None
+        logger.info("   DB Connection will be w/o authentication (debug mode)")
 
     # Things we default, but can capture in as environment variables
     be_quiet = True if (os.environ.get('be_quiet') and os.environ.get('be_quiet').upper()=="TRUE") else False
     if be_quiet:
         logger.setLevel(logging.ERROR)
 
-    BATCH_SIZE = int(os.getenv('BATCH_SIZE', 10000))
-
-    # Things we grab from REST API View
-    bb_module = "bb_module_default"
-    bb_method = "blackbox_function_default"
-    schema_inbound = None # dependent on model, must come from deployment
-    #schema_outbound = None # dependent on model, must come from deployment
-    tbl_out_results =  None # dependent on deployment, must come from deployment
-    tbl_out_audit = None # dependent on deployment, must come from deployment
-
     dep_details_uri = f"{KML_API_BASE}/model/deployment/{KML_DEPL_ID}/view"
-    logger.info(f"Obtaining deployment details from {dep_details_uri}")
+    logger.info(f"Deployment details from {dep_details_uri}, attempting connection...")
     if not validate_kml_api(KML_API_BASE, credentials):
         logger.error(f"Could not reach KML REST API for deployment details")
         sys.exit(1)
+    logger.info(f"Deployment details from {dep_details_uri}, successfully connected")
     dep_details_resp = requests.get(dep_details_uri, auth=credentials)
     if (dep_details_resp.status_code == 404):
         logger.error(f"Could not find deployment with id {KML_DEPL_ID}")
         sys.exit(1)
     dep_details = dep_details_resp.json()
+    logger.info(f"Deployment details from {dep_details_uri}, successfully obtained deployment details")
 
     if 'success' not in dep_details or not dep_details['success']:
         logger.error(f"Could not find live deployment with id {KML_DEPL_ID}")
@@ -154,6 +150,7 @@ if __name__ == '__main__':
     logger.info(f"Output fields: {len(outfields)}")
     for outf in outfields:
         logger.info(f"   Output field: {outf}")
+    protected_fields = outfields + ["guid", "receive_dt", "process_start_dt", "process_end_dt"]
 
     schema_decoder = json.dumps(schema_inbound) #json.loads(json.dumps(schema_inbound))
     method_to_call = getattr(__import__(bb_module), bb_method)
@@ -166,7 +163,8 @@ if __name__ == '__main__':
     default_results_subdict={
         "success":0,
         "errorlog": None,
-        "errorstack": None
+        "errorstack": None,
+        "process_end_dt": None
         }
 
     # TODO Put these connection activities into a higher-level giant try-catch
@@ -208,20 +206,22 @@ if __name__ == '__main__':
                 logger.info(f"Processing insert notification with {parts_received-1} frames, block request {block_request_count}")
 
                 results_package_list = gpudb.GPUdbRecord.decode_binary_data(schema_decoder, mpr[1:])
-                process_start_dt = datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
-                receive_dt = datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
+                process_start_dt = datetime.datetime.now().isoformat(' ')[:-3]
                 for mindex, results_package in enumerate(results_package_list):
                     response_count += 1
                     results_package_list[mindex].update(default_results_subdict)
                     results_package_list[mindex]["process_start_dt"] = process_start_dt
                     results_package_list[mindex]["process_end_dt"]=None
-                    if 'guid' not in results_package_list[mindex]:
-                        results_package_list[mindex]['guid'] = str(uuid.uuid4())
-                        results_package_list[mindex]['receive_dt'] = receive_dt
+
                 outMaps = method_to_call(results_package_list)
 
-                process_end_dt = datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
+                process_end_dt = datetime.datetime.now().isoformat(' ')[:-3]
                 for mindex, results_package in enumerate(results_package_list):
+                    # Protected fields cannot be overwritten by blackbox function
+                    #for pf in protected_fields:
+                    #    if pf in outMaps[mindex]:
+                    #        outMaps[mindex].pop(pf)
+
                     results_package_list[mindex].update(outMaps[mindex])
                     results_package_list[mindex]["process_end_dt"] = process_end_dt
                     results_package_list[mindex]["success"]=1
@@ -257,26 +257,34 @@ if __name__ == '__main__':
                 block_request_count += 1
 
                 parts_received = len(mpr)
-                logger.info(f"Processing insert notification with {parts_received-1} frames, block request {block_request_count}")
+                logger.info(f"Received inbound request number {block_request_count} with {parts_received-1} frames")
+                #logger.info(f"Processing insert notification with {parts_received-1} frames, block request {block_request_count}")
 
                 results_package_list = gpudb.GPUdbRecord.decode_binary_data(schema_decoder, mpr[1:])
-                process_start_dt = datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
-                receive_dt = datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
+                process_start_dt = datetime.datetime.now().isoformat(' ')[:-3]
                 for mindex, results_package in enumerate(results_package_list):
                     response_count += 1
                     results_package_list[mindex].update(default_results_subdict)
                     results_package_list[mindex]["process_start_dt"] = process_start_dt
-                    results_package_list[mindex]["process_end_dt"]=None
-                    if 'guid' not in results_package_list[mindex]:
-                        results_package_list[mindex]['guid'] = str(uuid.uuid4())
-                        results_package_list[mindex]['receive_dt'] = receive_dt
-                outMaps = method_to_call(results_package_list)
 
-                process_end_dt = datetime.datetime.now().replace(microsecond=100).isoformat(' ')[:-3]
                 for mindex, results_package in enumerate(results_package_list):
-                    results_package_list[mindex].update(outMaps[mindex])
-                    results_package_list[mindex]["process_end_dt"] = process_end_dt
-                    results_package_list[mindex]["success"]=1
+                    try:
+                        outMap = method_to_call(results_package_list[mindex])
+                        # Protected fields cannot be overwritten by blackbox function
+                        #for pf in protected_fields:
+                        #    if pf in outMap:
+                        #        outMap.pop(pf)
+                        results_package_list[mindex].update(outMap)
+                        results_package_list[mindex]["success"]=1
+                    except Exception as e:
+                        logger.error(e)
+                        error_type, error, tb = sys.exc_info()
+                        logger.error(traceback.format_tb(tb))
+                        traceback.print_exc(file=sys.stdout)
+                        results_package_list[mindex]["errorstack"]="\n".join(traceback.format_tb(tb))
+                        if e:
+                            results_package_list[mindex]["errorlog"]=str(e)
+                    results_package_list[mindex]["process_end_dt"] = datetime.datetime.now().isoformat(' ')[:-3]
 
                 _ = h_tbl_out_audit.insert_records(results_package_list)
                 if h_tbl_out_results is None:
