@@ -1,6 +1,8 @@
 import time
 import random
 
+import pandas as pd
+
 def blackbox_function_default(inMap):
     outMap = inMap
     return outMap
@@ -31,12 +33,24 @@ def blackbox_function_math(inMap):
         raise Exception("User-initiated purposeful failure! Go Figure")
 
     outMap = {
-        'sum':f1+f2, 
+        'sum':f1+f2,
         'product':f1*f2,
         'max':max([f1,f2]),
         'suminwords': mylabel + " " + str(int(f1+f2))
         }
-    return outMap    
+    return outMap
+
+def blackbox_function_math_batched(inMap):
+    # Unlike the non-batched variant above, inMap here is an ARRAY of dicts
+    in_df = pd.DataFrame(inMap)
+    in_df['figure1_numeric'] = pd.to_numeric(in_df["figure1"])
+    in_df['figure2_numeric'] = pd.to_numeric(in_df["figure2"])
+
+    in_df['sum'] = in_df["figure1_numeric"] + in_df["figure2_numeric"]
+    in_df['product'] = in_df["figure1_numeric"] * in_df["figure2_numeric"]
+    in_df['max'] = in_df[["figure1_numeric", "figure2_numeric"]].max(axis=1)
+    in_df['suminwords'] = in_df["mylabel"] + " " + in_df['sum'].astype(str)
+    return in_df.to_dict('records')
 
 def blackbox_function_math_multiout(inMap):
     f1=int(inMap['figure1'])
@@ -62,12 +76,12 @@ def blackbox_function_advanced_math(inMap):
         raise Exception("User-initiated purposeful failure! Go Figure")
 
     outMap = {
-        'division':f1/f2, 
+        'division':f1/f2,
         'modulo':f1%f2,
         'min':min([f1,f2]),
         'productinwords': mylabel + " " + str(int(f1*f2))
         }
-    return outMap        
+    return outMap
 
 def blackbox_function_math_superslow(inMap):
     f1=int(inMap['figure1'])
@@ -90,12 +104,12 @@ def blackbox_function_math_superslow(inMap):
         raise Exception("User-initiated purposeful failure! Go Figure")
 
     outMap = {
-        'sum':f1+f2, 
+        'sum':f1+f2,
         'product':f1*f2,
         'max':max([f1,f2]),
         'suminwords': mylabel + " " + str(int(f1+f2))
         }
-    return outMap     
+    return outMap
 
 # BlackBox function to demonstrate intake of environment variables
 def blackbox_function_envvar_demo(inMap):
@@ -109,9 +123,9 @@ def blackbox_function_envvar_demo(inMap):
         raise Exception("Missing environment variable ENVVAR2")
 
     outMap = {
-        'sum':f1+f2, 
+        'sum':f1+f2,
         'product':f1*f2,
         'max':max([f1,f2]),
-        'suminwords': f"{ENVVAR1} {f1+f2} {ENVVAR2}" 
+        'suminwords': f"{ENVVAR1} {f1+f2} {ENVVAR2}"
         }
     return outMap

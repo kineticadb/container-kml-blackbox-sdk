@@ -1,3 +1,4 @@
 gpudb
 zmq
 requests
+pandas
