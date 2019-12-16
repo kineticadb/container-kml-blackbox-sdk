@@ -32,6 +32,7 @@ dep_name = '-'.join([pt[0], pt[1], pt[2]])
 
 DEFAULT_EVENT_SIG = {"deployment_id": env_dep_id,
                      "deployment_name": dep_name,
+                     "reporter_type": "WORKER",
                      "k8s_pod_name": env_pod_name}
 
 
@@ -106,12 +107,13 @@ def register_event_lifecycle(api_base, credentials, event_sub_type):
         traceback.print_exc(file=sys.stdout)
 
 
-def register_event_metrics(api_base, credentials, seq_id=None, recs_received=None, recs_inf_success=None, recs_inf_failure=None, recs_inf_persisted=None, throughput_inf=None, throughput_e2e=None):
+def register_event_metrics(api_base, credentials, seq_id=None, recs_received=None, recs_relayed=None, recs_inf_success=None, recs_inf_failure=None, recs_inf_persisted=None, throughput_inf=None, throughput_e2e=None):
 
     payload = {
         "event_type": "METRICS",
         "seq_id": seq_id,
         "recs_received": recs_received,
+        "recs_relayed": None,
         "recs_inf_success": recs_inf_success,
         "recs_inf_failure": recs_inf_failure,
         "recs_inf_persisted": recs_inf_persisted,
