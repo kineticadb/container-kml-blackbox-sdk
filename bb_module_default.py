@@ -40,7 +40,7 @@ def blackbox_function_math(inMap):
         }
     return outMap
 
-def blackbox_function_math_batched(inMap):
+def blackbox_function_math_bulkinfer(inMap):
     # Unlike the non-batched variant above, inMap here is an ARRAY of dicts
     in_df = pd.DataFrame(inMap)
     in_df['figure1_numeric'] = pd.to_numeric(in_df["figure1"])

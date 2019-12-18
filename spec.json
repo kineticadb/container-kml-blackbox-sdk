@@ -2,7 +2,7 @@
   "name": "Kinetica BlackBox SDK: Trivial Example BlackBox functions",
   "desc": "Kinetica BlackBox SDK: Trivial BlackBox functions demonstrating possible options and permutations",
   "icon_uri": "https://kinetica-aaw-marketplace.s3.amazonaws.com/logos/appstore_logo_model.png",
-  "src_uri": "kinetica/kinetica-blackbox-sdk:r7.0.9",
+  "src_uri": "kinetica/kinetica-blackbox-sdk:r7.0.11",
   "type": "BLACKBOX",
 
   "industry": [],
@@ -40,6 +40,56 @@
       "desc": "Trivial Sample BlackBox function demonstrating function with required params of different types.",
       "bb_module": "bb_module_default",
       "bb_function": "blackbox_function_math",
+      "input_record_type": [
+        {
+          "col_name": "figure1",
+          "col_type": "double",
+          "col_desc": "First figure for mathematical operations",
+          "col_default_val": "90210"
+        },
+        {
+          "col_name": "figure2",
+          "col_type": "double",
+          "col_desc": "Second figure for mathematical operations",
+          "col_default_val": "11215"
+        },
+        {
+          "col_name": "mylabel",
+          "col_type": "string|char64",
+          "col_desc": "Label for enhancing output",
+          "col_default_val": "The New Yorker"
+        }
+      ],
+      "output_record_type": [
+        {
+          "col_name": "sum",
+          "col_type": "double",
+          "col_desc": "Sum of input figures provided"
+        },
+        {
+          "col_name": "product",
+          "col_type": "double",
+          "col_desc": "Product of input figures provided"
+        },
+        {
+          "col_name": "max",
+          "col_type": "double",
+          "col_desc": "Maximum of two of input figures provided"
+        },
+        {
+          "col_name": "suminwords",
+          "col_type": "string|store_only",
+          "col_desc": "Sum of input figures provided with labeled flair"
+        }
+      ],
+      "env_vars": [],
+      "compute-support": ["CPU"]
+    },
+    {
+      "name": "Bulk Inference Example",
+      "desc": "Trivial Sample BlackBox function demonstrating Bulk Inference.",
+      "bb_module": "bb_module_default",
+      "bb_function": "blackbox_function_math_bulkinfer",
       "input_record_type": [
         {
           "col_name": "figure1",
