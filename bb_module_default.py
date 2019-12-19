@@ -3,6 +3,7 @@ import random
 
 import pandas as pd
 
+
 def blackbox_function_default(inMap):
     outMap = inMap
     return outMap
@@ -39,8 +40,10 @@ def blackbox_function_math(inMap):
         'suminwords': mylabel + " " + str(int(f1+f2))
         }
     return outMap
-setattr(blackbox_function_default, 'BULK_INFER_CAPABLE', False)
 
+from sdk.bb_runner import bulk_infer_capable
+
+@bulk_infer_capable
 def blackbox_function_math_bulkinfer(inMap):
     # Unlike the non-batched variant above, inMap here is an ARRAY of dicts
     in_df = pd.DataFrame(inMap)
@@ -52,7 +55,6 @@ def blackbox_function_math_bulkinfer(inMap):
     in_df['max'] = in_df[["figure1_numeric", "figure2_numeric"]].max(axis=1)
     in_df['suminwords'] = in_df["mylabel"] + " " + in_df['sum'].astype(str)
     return in_df.to_dict('records')
-setattr(blackbox_function_default, 'BULK_INFER_CAPABLE', True)
 
 def blackbox_function_math_multiout(inMap):
     f1=int(inMap['figure1'])

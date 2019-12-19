@@ -17,6 +17,16 @@ import gpudb
 import requests
 from requests.exceptions import ConnectionError
 
+###############################################################################
+# For use by SDK Clients
+# Use this decorator if you wish to declare a black box function bulk capable
+def bulk_infer_capable(func):
+    def inner(inMap):
+        return func(inMap)
+    setattr(inner, 'BULK_INFER_CAPABLE', True)
+    return inner
+###############################################################################
+
 logger = logging.getLogger("kml-bbx-sdk")
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -223,9 +233,7 @@ if __name__ == '__main__':
     logger.info(f"Dynamically loaded function {bb_method} from module {bb_module} for lambda application")
 
     BLACKBOX_MULTIROW_INFER = False
-    logger.info(dir(method_to_call))
     if 'BULK_INFER_CAPABLE' in dir(method_to_call):
-        logger.info(getattr(method_to_call, 'BULK_INFER_CAPABLE'))
         if getattr(method_to_call, 'BULK_INFER_CAPABLE'):
             BLACKBOX_MULTIROW_INFER = True
 
@@ -233,14 +241,6 @@ if __name__ == '__main__':
         logger.info("   Employing Bulk Infer")
     else:
         logger.info("   Employing Single-Row (Traditional Mode) Infer")
-
-
-    #if "BLACKBOX_MULTIROW_INFER" in os.environ and os.environ["BLACKBOX_MULTIROW_INFER"].lower().strip()=="true":
-    #    BLACKBOX_MULTIROW_INFER = True
-    #    logger.info("   Employing Multi-Row Infer")
-    #else:
-    #    logger.info("   Employing Single-Row (Traditional Mode) Infer")
-
 
     block_request_count = 0
     response_count=0
