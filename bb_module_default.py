@@ -3,6 +3,7 @@ import random
 
 import pandas as pd
 
+
 def blackbox_function_default(inMap):
     outMap = inMap
     return outMap
@@ -40,6 +41,9 @@ def blackbox_function_math(inMap):
         }
     return outMap
 
+from sdk.bb_runner import bulk_infer_capable
+
+@bulk_infer_capable
 def blackbox_function_math_bulkinfer(inMap):
     # Unlike the non-batched variant above, inMap here is an ARRAY of dicts
     in_df = pd.DataFrame(inMap)

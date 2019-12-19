@@ -4,7 +4,6 @@
   "icon_uri": "https://kinetica-aaw-marketplace.s3.amazonaws.com/logos/appstore_logo_model.png",
   "src_uri": "kinetica/kinetica-blackbox-sdk:r7.0.11",
   "type": "BLACKBOX",
-
   "industry": [],
   "keywords": [],
   "docs_url": "",
@@ -13,7 +12,6 @@
   "is_available": true,
   "thumbnail_url": "",
   "screenshot_urls": [],
-
   "functions": [
     {
       "name": "Trivial Sample BlackBox function demonstrating function with no required params",
@@ -23,7 +21,9 @@
       "input_record_type": [],
       "output_record_type": [],
       "env_vars": [],
-      "compute-support": ["CPU"]
+      "compute-support": [
+        "CPU"
+      ]
     },
     {
       "name": "Identity function",
@@ -33,7 +33,9 @@
       "input_record_type": [],
       "output_record_type": [],
       "env_vars": [],
-      "compute-support": ["CPU"]
+      "compute-support": [
+        "CPU"
+      ]
     },
     {
       "name": "Trivial Sample BlackBox function demonstrating function with required params of different types",
@@ -83,7 +85,9 @@
         }
       ],
       "env_vars": [],
-      "compute-support": ["CPU"]
+      "compute-support": [
+        "CPU"
+      ]
     },
     {
       "name": "Bulk Inference Example",
@@ -133,7 +137,9 @@
         }
       ],
       "env_vars": [],
-      "compute-support": ["CPU"]
+      "compute-support": [
+        "CPU"
+      ]
     },
     {
       "name": "Trivial Sample BlackBox function demonstrating function with multiple output rows",
@@ -173,7 +179,9 @@
         }
       ],
       "env_vars": [],
-      "compute-support": ["CPU"]
+      "compute-support": [
+        "CPU"
+      ]
     },
     {
       "name": "Trivial Sample BlackBox function demonstrating different operations with required params of different types",
@@ -223,7 +231,9 @@
         }
       ],
       "env_vars": [],
-      "compute-support": ["CPU"]
+      "compute-support": [
+        "CPU"
+      ]
     },
     {
       "name": "Function with environment variables",
@@ -272,7 +282,75 @@
           "var_default_val": "world"
         }
       ],
-      "compute-support": ["CPU"]
+      "compute-support": [
+        "CPU"
+      ]
+    },
+    {
+      "name": "Kinetica BlackBox Sample: Temperature conversion",
+      "desc": "Kinetica BlackBox Sample: Temperature conversion from fahrenheit to centrigrade",
+      "bb_module": "bb_module_temperature",
+      "bb_function": "convert_to_celsius",
+      "multiout": false,
+      "input_record_type": [
+        {
+          "col_name": "temp_f",
+          "col_type": "double",
+          "col_desc": "Temperature in fahrenheit",
+          "col_default_val": "18.7"
+        }
+      ],
+      "output_record_type": [
+        {
+          "col_name": "temp_c",
+          "col_type": "double",
+          "col_desc": "Temperature converted to centrigrade"
+        },
+        {
+          "col_name": "temp_k",
+          "col_type": "double",
+          "col_desc": "Temperature converted to kelvins"
+        },
+        {
+          "col_name": "state",
+          "col_type": "string|store_only",
+          "col_desc": "The state of water at this temperature"
+        }
+      ],
+      "env_vars": []
+    },
+    {
+      "name": "Kinetica BlackBox Sample: Temperature conversion",
+      "desc": "Kinetica BlackBox Function Sample: Temperature conversion from centrigrade to fahrenheit -- mean to demonstrate the use of functions outside of bb_module_default.",
+      "bb_module": "bb_module_temperature",
+      "bb_function": "convert_to_fahrenheit",
+      "multiout": false,
+      "input_record_type": [
+        {
+          "col_name": "temp_c",
+          "col_type": "double",
+          "col_desc": "Temperature in centrigrade",
+          "col_default_val": "187"
+        }
+      ],
+      "output_record_type": [
+        {
+          "col_name": "temp_f",
+          "col_type": "double",
+          "col_desc": "Temperature converted to fahrenheit"
+        },
+        {
+          "col_name": "temp_k",
+          "col_type": "double",
+          "col_desc": "Temperature converted to kelvins"
+        },
+        {
+          "col_name": "state",
+          "col_type": "string|store_only",
+          "col_desc": "The state of water at this temperature"
+        }
+      ],
+      "env_vars": []
     }
   ]
 }
