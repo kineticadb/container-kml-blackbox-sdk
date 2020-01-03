@@ -1,0 +1,165 @@
+{
+  "animal": {
+    "function_xform": "onehot",
+    "stats": {
+      "unique_terms": [
+        "cat",
+        "dog",
+        "grizzly bear"
+      ]
+    },
+    "kexp": {
+      "animal_is_cat": "if(animal=\"cat\",1,0)",
+      "animal_is_dog": "if(animal=\"dog\",1,0)",
+      "animal_is_grizzly_bear": "if(animal=\"grizzly_bear\",1,0)",
+      "animal_is_other": "if(animal not in ('cat', 'dog', 'grizzly bear'),1,0)"
+    },
+    "outschema": [
+      [
+        "animal_is_cat",
+        "int",
+        "int8"
+      ],
+      [
+        "animal_is_dog",
+        "int",
+        "int8"
+      ],
+      [
+        "animal_is_grizzly_bear",
+        "int",
+        "int8"
+      ],
+      [
+        "animal_is_other",
+        "int",
+        "int8"
+      ]
+    ]
+  },
+  "happy": {
+    "function_xform": "bucket",
+    "stats": {
+      "min": -36,
+      "max": 187,
+      "bins": 5,
+      "div": 44.6
+    },
+    "kexp": {
+      "happy_xform": "if(happy<-36.0,0,if(happy>=-36.0 & happy<44.6,1,if(happy>=44.6 & happy<89.2,2,if(happy>=89.2 & happy<133.8,3,if(happy>=133.8 & happy<178.4,4,if(happy>=178.4 & happy<223.0,5,if(happy>=223.0 & happy<=187.0,6,7)))))))"
+    },
+    "outschema": [
+      [
+        "happy_xform",
+        "int",
+        "int16"
+      ]
+    ]
+  },
+  "height": {
+    "function_xform": "ln",
+    "stats": {},
+    "kexp": {
+      "height_xform": "ln(height)"
+    },
+    "outschema": [
+      [
+        "height_xform",
+        "double"
+      ]
+    ]
+  },
+  "species": {
+    "function_xform": "vocabulary",
+    "stats": {
+      "val_map": {
+        "canis fimilaris": "1",
+        "felis domesticus": "2",
+        "ursus horribilis": "3",
+        "OTHER": "0"
+      }
+    },
+    "kexp": {
+      "species_xform": "case(species,{\"canis fimilaris\",\"felis domesticus\",\"ursus horribilis\"},{1,2,3},0)"
+    },
+    "outschema": [
+      [
+        "species_xform",
+        "int",
+        "int16"
+      ]
+    ]
+  },
+  "age": {
+    "function_xform": "normalize",
+    "stats": {
+      "min": -42,
+      "max": 187,
+      "spread": 229
+    },
+    "kexp": {
+      "age_xform": "(age--42.0)/229.0"
+    },
+    "outschema": [
+      [
+        "age_xform",
+        "double"
+      ]
+    ]
+  },
+  "yield": {
+    "function_xform": "zscale",
+    "stats": {
+      "mean": 85.0885309,
+      "stdv": 113.37573921309568
+    },
+    "kexp": {
+      "yield_xform": "(yield-85.0885309)/113.37573921309568"
+    },
+    "outschema": [
+      [
+        "yield_xform",
+        "double"
+      ]
+    ]
+  },
+  "legs": {
+    "function_xform": "inverse",
+    "stats": {},
+    "kexp": {
+      "legs_xform": "if(legs!=0,1/legs,0)"
+    },
+    "outschema": [
+      [
+        "legs_xform",
+        "double"
+      ]
+    ]
+  },
+  "tag": {
+    "function_xform": "identity",
+    "stats": {},
+    "kexp": {
+      "tag_xform": "tag"
+    },
+    "outschema": [
+      [
+        "tag_xform",
+        "string"
+      ]
+    ]
+  },
+  "speed": {
+    "function_xform": "log",
+    "stats": {},
+    "kexp": {
+      "speed_xform": "log10(speed)"
+    },
+    "outschema": [
+      [
+        "speed_xform",
+        "double"
+      ]
+    ]
+  }
+}

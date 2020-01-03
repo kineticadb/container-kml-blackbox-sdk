@@ -19,11 +19,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 RUN apt-get install -y git htop wget nano
 
 RUN mkdir -p /opt/gpudb/kml/bbx
+RUN mkdir -p /opt/gpudb/kml/bbx/specs
 WORKDIR "/opt/gpudb/kml/bbx"
 
 # Install Required Libraries and Dependencies
 ADD requirements.txt  ./
 RUN pip install -r requirements.txt --no-cache-dir
+
+# Add introspection assets
+ADD *.json ./specs/
 
 # Add Kinetica BlackBox SDK
 ADD bb_runner.sh ./

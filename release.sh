@@ -1,6 +1,11 @@
 #! /bin/bash
 
 repo_uri=$(cat repo_uri.info)
+
+# Removed since Docker Daemon cant handle overly complex double escaped json files for specs
+#python -m sdk.prepper --spec-in spec.json --spec-out spec_enriched.json
+#importspec=$(sed 's/\"/\\\"/g' spec_enriched.json | tr -d '\n')
+
 importspec=$(sed 's/\"/\\\"/g' spec.json | tr -d '\n')
 
 echo "Building and publishing to $repo_uri"
@@ -10,7 +15,7 @@ cp Dockerfile Dockerfile.WITH_SPECLABEL
 echo "" >> Dockerfile.WITH_SPECLABEL
 echo "LABEL kinetica.ml.import.spec=\"$importspec\""  >> Dockerfile.WITH_SPECLABEL
 
-docker build -f Dockerfile.WITH_SPECLABEL -t $repo_uri . 
+docker build -f Dockerfile.WITH_SPECLABEL -t $repo_uri .
 
 if [ "$?" -eq "0" ]
 then
@@ -22,3 +27,6 @@ else
 fi
 
 rm Dockerfile.WITH_SPECLABEL
+
+# Removed since Docker Daemon cant handle overly complex double escaped json files for specs
+#rm spec_enriched.json
