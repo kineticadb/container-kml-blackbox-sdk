@@ -1,165 +1,228 @@
 {
-  "animal": {
-    "function_xform": "onehot",
-    "stats": {
-      "unique_terms": [
-        "cat",
-        "dog",
-        "grizzly bear"
+    "animal": {
+      "function_xform": "onehot",
+      "stats": {
+        "unique_terms": [
+          "cat",
+          "dog",
+          "grizzly bear"
+        ]
+      },
+      "kexp": {
+        "animal_is_cat": "if(animal=\"cat\",1,0)",
+        "animal_is_dog": "if(animal=\"dog\",1,0)",
+        "animal_is_grizzly_bear": "if(animal=\"grizzly_bear\",1,0)",
+        "animal_is_other": "if(animal not in ('cat', 'dog', 'grizzly bear'),1,0)"
+      },
+      "inschema": [
+        "animal",
+        "string",
+        "char32"
+      ],
+      "outschema": [
+        [
+          "animal_is_cat",
+          "int",
+          "int8"
+        ],
+        [
+          "animal_is_dog",
+          "int",
+          "int8"
+        ],
+        [
+          "animal_is_grizzly_bear",
+          "int",
+          "int8"
+        ],
+        [
+          "animal_is_other",
+          "int",
+          "int8"
+        ]
       ]
     },
-    "kexp": {
-      "animal_is_cat": "if(animal=\"cat\",1,0)",
-      "animal_is_dog": "if(animal=\"dog\",1,0)",
-      "animal_is_grizzly_bear": "if(animal=\"grizzly_bear\",1,0)",
-      "animal_is_other": "if(animal not in ('cat', 'dog', 'grizzly bear'),1,0)"
+    "happy": {
+      "function_xform": "bucket",
+      "stats": {
+        "min": 1,
+        "max": 1,
+        "bins": 5,
+        "div": 0
+      },
+      "kexp": {
+        "happy_xform": "if(happy<1.0,0,if(happy>=1.0 & happy<0.0,1,if(happy>=0.0 & happy<0.0,2,if(happy>=0.0 & happy<0.0,3,if(happy>=0.0 & happy<0.0,4,if(happy>=0.0 & happy<0.0,5,if(happy>=0.0 & happy<=1.0,6,7)))))))"
+      },
+      "inschema": [
+        "happy",
+        "double"
+      ],
+      "outschema": [
+        [
+          "happy_xform",
+          "int",
+          "int16"
+        ]
+      ]
     },
-    "outschema": [
-      [
-        "animal_is_cat",
+    "height": {
+      "function_xform": "ln",
+      "stats": {},
+      "kexp": {
+        "height_xform": "ln(height)"
+      },
+      "inschema": [
+        "height",
+        "double"
+      ],
+      "outschema": [
+        [
+          "height_xform",
+          "double"
+        ]
+      ]
+    },
+    "species": {
+      "function_xform": "vocabulary",
+      "stats": {
+        "val_map": {
+          "canis fimilaris": "1",
+          "felis domesticus": "2",
+          "ursus horribilis": "3",
+          "OTHER": "0"
+        }
+      },
+      "kexp": {
+        "species_xform": "case(species,{\"canis fimilaris\",\"felis domesticus\",\"ursus horribilis\"},{1,2,3},0)"
+      },
+      "inschema": [
+        "species",
+        "string",
+        "char32"
+      ],
+      "outschema": [
+        [
+          "species_xform",
+          "int",
+          "int16"
+        ]
+      ]
+    },
+    "age": {
+      "function_xform": "normalize",
+      "stats": {
+        "min": 13,
+        "max": 13,
+        "spread": 0
+      },
+      "kexp": {
+        "age_xform": "(age-13.0)/0.0"
+      },
+      "inschema": [
+        "age",
         "int",
         "int8"
       ],
-      [
-        "animal_is_dog",
-        "int",
-        "int8"
+      "outschema": [
+        [
+          "age_xform",
+          "double"
+        ]
+      ]
+    },
+    "yield": {
+      "function_xform": "zscale",
+      "stats": {
+        "mean": 120,
+        "stdv": 0
+      },
+      "kexp": {
+        "yield_xform": "(yield-120.0)/0.0"
+      },
+      "inschema": [
+        "yield",
+        "double"
       ],
-      [
-        "animal_is_grizzly_bear",
-        "int",
-        "int8"
+      "outschema": [
+        [
+          "yield_xform",
+          "double"
+        ]
+      ]
+    },
+    "legs": {
+      "function_xform": "inverse",
+      "stats": {},
+      "kexp": {
+        "legs_xform": "if(legs!=0,1/legs,0)"
+      },
+      "inschema": [
+        "legs",
+        "double"
       ],
-      [
-        "animal_is_other",
-        "int",
-        "int8"
+      "outschema": [
+        [
+          "legs_xform",
+          "double"
+        ]
       ]
-    ]
-  },
-  "happy": {
-    "function_xform": "bucket",
-    "stats": {
-      "min": -36,
-      "max": 187,
-      "bins": 5,
-      "div": 44.6
     },
-    "kexp": {
-      "happy_xform": "if(happy<-36.0,0,if(happy>=-36.0 & happy<44.6,1,if(happy>=44.6 & happy<89.2,2,if(happy>=89.2 & happy<133.8,3,if(happy>=133.8 & happy<178.4,4,if(happy>=178.4 & happy<223.0,5,if(happy>=223.0 & happy<=187.0,6,7)))))))"
-    },
-    "outschema": [
-      [
-        "happy_xform",
-        "int",
-        "int16"
+    "tag": {
+      "function_xform": "identity",
+      "stats": {},
+      "kexp": {
+        "tag": "tag"
+      },
+      "inschema": [
+        "tag",
+        "string",
+        "char32"
+      ],
+      "outschema": [
+        [
+          "tag",
+          "string"
+        ]
       ]
-    ]
-  },
-  "height": {
-    "function_xform": "ln",
-    "stats": {},
-    "kexp": {
-      "height_xform": "ln(height)"
     },
-    "outschema": [
-      [
-        "height_xform",
-        "double"
-      ]
-    ]
-  },
-  "species": {
-    "function_xform": "vocabulary",
-    "stats": {
-      "val_map": {
-        "canis fimilaris": "1",
-        "felis domesticus": "2",
-        "ursus horribilis": "3",
-        "OTHER": "0"
-      }
-    },
-    "kexp": {
-      "species_xform": "case(species,{\"canis fimilaris\",\"felis domesticus\",\"ursus horribilis\"},{1,2,3},0)"
-    },
-    "outschema": [
-      [
-        "species_xform",
-        "int",
-        "int16"
-      ]
-    ]
-  },
-  "age": {
-    "function_xform": "normalize",
-    "stats": {
-      "min": -42,
-      "max": 187,
-      "spread": 229
-    },
-    "kexp": {
-      "age_xform": "(age--42.0)/229.0"
-    },
-    "outschema": [
-      [
-        "age_xform",
-        "double"
-      ]
-    ]
-  },
-  "yield": {
-    "function_xform": "zscale",
-    "stats": {
-      "mean": 85.0885309,
-      "stdv": 113.37573921309568
-    },
-    "kexp": {
-      "yield_xform": "(yield-85.0885309)/113.37573921309568"
-    },
-    "outschema": [
-      [
-        "yield_xform",
-        "double"
-      ]
-    ]
-  },
-  "legs": {
-    "function_xform": "inverse",
-    "stats": {},
-    "kexp": {
-      "legs_xform": "if(legs!=0,1/legs,0)"
-    },
-    "outschema": [
-      [
-        "legs_xform",
-        "double"
-      ]
-    ]
-  },
-  "tag": {
-    "function_xform": "identity",
-    "stats": {},
-    "kexp": {
-      "tag_xform": "tag"
-    },
-    "outschema": [
-      [
-        "tag_xform",
+    "animal_id": {
+      "function_xform": "identity",
+      "stats": {},
+      "kexp": {
+        "animal_id": "animal_id"
+      },
+      "inschema": [
+        "animal_id",
         "string"
+      ],
+      "outschema": [
+        [
+          "animal_id",
+          "string"
+        ]
       ]
-    ]
-  },
-  "speed": {
-    "function_xform": "log",
-    "stats": {},
-    "kexp": {
-      "speed_xform": "log10(speed)"
     },
-    "outschema": [
-      [
-        "speed_xform",
+    "speed": {
+      "function_xform": "log",
+      "stats": {},
+      "kexp": {
+        "speed_xform": "log10(speed)"
+      },
+      "inschema": [
+        "speed",
         "double"
+      ],
+      "outschema": [
+        [
+          "speed_xform",
+          "double"
+        ]
       ]
-    ]
+    },
+    "kml::metadata": {
+      "gen_date": "2019-12-30 23:51:47.147",
+      "src_entity_id": 2,
+      "src_entity_name": "Native feature engineering",
+      "src_entity_desc": "On DB transforms"
+    }
   }
-}
