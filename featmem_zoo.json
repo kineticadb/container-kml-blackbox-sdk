@@ -185,23 +185,6 @@
         ]
       ]
     },
-    "animal_id": {
-      "function_xform": "identity",
-      "stats": {},
-      "kexp": {
-        "animal_id": "animal_id"
-      },
-      "inschema": [
-        "animal_id",
-        "string"
-      ],
-      "outschema": [
-        [
-          "animal_id",
-          "string"
-        ]
-      ]
-    },
     "speed": {
       "function_xform": "log",
       "stats": {},
