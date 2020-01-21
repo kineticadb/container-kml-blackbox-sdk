@@ -319,7 +319,7 @@ if __name__ == '__main__':
                     results_package_list[mindex]["process_start_dt"] = process_start_dt
 
                 t_start_inf = time.time()
-                outMaps = method_to_call(results_package_list)
+                outMaps = method_to_call(copy.deepcopy(results_package_list))
                 t_end_inf = time.time()
                 recs_inf_success = recs_received # we can assume everything was successful, a moderately OK assumption
                 recs_inf_failure = 0
