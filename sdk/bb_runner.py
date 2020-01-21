@@ -403,7 +403,7 @@ if __name__ == '__main__':
                 t_start_inf = time.time()
                 for mindex, results_package in enumerate(results_package_list):
                     try:
-                        outMap = method_to_call(results_package_list[mindex])
+                        outMap = method_to_call(copy.deepcopy(results_package_list[mindex]))
                         if not isinstance(outMap, list):
                             # TODO: Consider force exceptioning on this case and forcing users to fix this
                             #logger.warn ("Received lone dictionary function output, force listifying")
