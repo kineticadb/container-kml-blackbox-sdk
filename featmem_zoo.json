@@ -11,7 +11,7 @@
         "kexp": {
             "animal_is_cat": "if(animal=\"cat\",1,0)",
             "animal_is_dog": "if(animal=\"dog\",1,0)",
-            "animal_is_grizzly_bear": "if(animal=\"grizzly_bear\",1,0)",
+            "animal_is_grizzly_bear": "if(animal=\"grizzly bear\",1,0)",
             "animal_is_other": "if(animal not in ('cat', 'dog', 'grizzly bear'),1,0)"
         },
         "outschema": [
@@ -50,7 +50,7 @@
             "div": 44.6
         },
         "kexp": {
-            "happy_xform": "if(happy<-36.0,0,if(happy>=-36.0 & happy<44.6,1,if(happy>=44.6 & happy<89.2,2,if(happy>=89.2 & happy<133.8,3,if(happy>=133.8 & happy<178.4,4,if(happy>=178.4 & happy<223.0,5,if(happy>=223.0 & happy<=187.0,6,7)))))))"
+            "happy_xform": "if(happy<-36.0,0,if(happy>187.0,7,floor(happy/44.6)+1))"
         },
         "outschema": [
             [
@@ -233,7 +233,7 @@
         ]
     },
     "metadata": {
-        "gen_date": "2020-01-17 14:32:37.633",
+        "gen_date": "2020-01-22 19:06:38.701",
         "src_entity_id": 2,
         "src_entity_name": "Native feature engineering",
         "src_entity_desc": "On DB transforms"
