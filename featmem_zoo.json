@@ -116,12 +116,11 @@
         "spread": 0
       },
       "kexp": {
-        "age_xform": "(age-13.0)/0.0"
+        "age_xform": "(age-13.0)/1.0"
       },
       "inschema": [
         "age",
-        "int",
-        "int8"
+        "double"
       ],
       "outschema": [
         [
@@ -137,7 +136,7 @@
         "stdv": 0
       },
       "kexp": {
-        "yield_xform": "(yield-120.0)/0.0"
+        "yield_xform": "(yield-120.0)/1.0"
       },
       "inschema": [
         "yield",
