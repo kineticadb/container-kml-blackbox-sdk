@@ -1,133 +1,131 @@
 {
     "animal": {
-      "function_xform": "onehot",
-      "stats": {
-        "unique_terms": [
-          "cat",
-          "dog",
-          "grizzly bear"
+        "function_xform": "onehot",
+        "stats": {
+            "unique_terms": [
+                "cat",
+                "dog",
+                "grizzly bear"
+            ]
+        },
+        "kexp": {
+            "animal_is_cat": "if(animal=\"cat\",1,0)",
+            "animal_is_dog": "if(animal=\"dog\",1,0)",
+            "animal_is_grizzly_bear": "if(animal=\"grizzly bear\",1,0)",
+            "animal_is_other": "if(animal not in ('cat', 'dog', 'grizzly bear'),1,0)"
+        },
+        "outschema": [
+            [
+                "animal_is_cat",
+                "int",
+                "int8"
+            ],
+            [
+                "animal_is_dog",
+                "int",
+                "int8"
+            ],
+            [
+                "animal_is_grizzly_bear",
+                "int",
+                "int8"
+            ],
+            [
+                "animal_is_other",
+                "int",
+                "int8"
+            ]
+        ],
+        "inschema": [
+            "animal",
+            "string"
         ]
-      },
-      "kexp": {
-        "animal_is_cat": "if(animal=\"cat\",1,0)",
-        "animal_is_dog": "if(animal=\"dog\",1,0)",
-        "animal_is_grizzly_bear": "if(animal=\"grizzly_bear\",1,0)",
-        "animal_is_other": "if(animal not in ('cat', 'dog', 'grizzly bear'),1,0)"
-      },
-      "inschema": [
-        "animal",
-        "string",
-        "char32"
-      ],
-      "outschema": [
-        [
-          "animal_is_cat",
-          "int",
-          "int8"
-        ],
-        [
-          "animal_is_dog",
-          "int",
-          "int8"
-        ],
-        [
-          "animal_is_grizzly_bear",
-          "int",
-          "int8"
-        ],
-        [
-          "animal_is_other",
-          "int",
-          "int8"
-        ]
-      ]
     },
     "happy": {
-      "function_xform": "bucket",
-      "stats": {
-        "min": 1,
-        "max": 1,
-        "bins": 5,
-        "div": 0
-      },
-      "kexp": {
-        "happy_xform": "if(happy<1.0,0,if(happy>=1.0 & happy<0.0,1,if(happy>=0.0 & happy<0.0,2,if(happy>=0.0 & happy<0.0,3,if(happy>=0.0 & happy<0.0,4,if(happy>=0.0 & happy<0.0,5,if(happy>=0.0 & happy<=1.0,6,7)))))))"
-      },
-      "inschema": [
-        "happy",
-        "double"
-      ],
-      "outschema": [
-        [
-          "happy_xform",
-          "int",
-          "int16"
+        "function_xform": "bucket",
+        "stats": {
+            "min": -36.0,
+            "max": 187.0,
+            "bins": 5,
+            "div": 44.6
+        },
+        "kexp": {
+            "happy_xform": "if(happy<-36.0,0,if(happy>187.0,7,floor(happy/44.6)+1))"
+        },
+        "outschema": [
+            [
+                "happy_xform",
+                "int",
+                "int16"
+            ]
+        ],
+        "inschema": [
+            "happy",
+            "double"
         ]
-      ]
     },
     "height": {
-      "function_xform": "ln",
-      "stats": {},
-      "kexp": {
-        "height_xform": "ln(height)"
-      },
-      "inschema": [
-        "height",
-        "double"
-      ],
-      "outschema": [
-        [
-          "height_xform",
-          "double"
+        "function_xform": "ln",
+        "stats": {},
+        "kexp": {
+            "height_xform": "ln(height)"
+        },
+        "outschema": [
+            [
+                "height_xform",
+                "double"
+            ]
+        ],
+        "inschema": [
+            "height",
+            "double"
         ]
-      ]
     },
     "species": {
-      "function_xform": "vocabulary",
-      "stats": {
-        "val_map": {
-          "canis fimilaris": "1",
-          "felis domesticus": "2",
-          "ursus horribilis": "3",
-          "OTHER": "0"
-        }
-      },
-      "kexp": {
-        "species_xform": "case(species,{\"canis fimilaris\",\"felis domesticus\",\"ursus horribilis\"},{1,2,3},0)"
-      },
-      "inschema": [
-        "species",
-        "string",
-        "char32"
-      ],
-      "outschema": [
-        [
-          "species_xform",
-          "int",
-          "int16"
+        "function_xform": "vocabulary",
+        "stats": {
+            "val_map": {
+                "canis fimilaris": "1",
+                "felis domesticus": "2",
+                "ursus horribilis": "3",
+                "OTHER": "0"
+            }
+        },
+        "kexp": {
+            "species_xform": "case(species,{\"canis fimilaris\",\"felis domesticus\",\"ursus horribilis\"},{1,2,3},0)"
+        },
+        "outschema": [
+            [
+                "species_xform",
+                "int",
+                "int16"
+            ]
+        ],
+        "inschema": [
+            "species",
+            "string"
         ]
-      ]
     },
     "age": {
-      "function_xform": "normalize",
-      "stats": {
-        "min": 13,
-        "max": 13,
-        "spread": 0
-      },
-      "kexp": {
-        "age_xform": "(age-13.0)/1.0"
-      },
-      "inschema": [
-        "age",
-        "double"
-      ],
-      "outschema": [
-        [
-          "age_xform",
-          "double"
+        "function_xform": "normalize",
+        "stats": {
+            "min": -42.0,
+            "max": 187.0,
+            "spread": 229.0
+        },
+        "kexp": {
+            "age_xform": "(age--42.0)/229.0"
+        },
+        "outschema": [
+            [
+                "age_xform",
+                "double"
+            ]
+        ],
+        "inschema": [
+            "age",
+            "int"
         ]
-      ]
     },
     "yield": {
       "function_xform": "zscale",
@@ -146,65 +144,116 @@
         [
           "yield_xform",
           "double"
+=======
+        "function_xform": "zscale",
+        "stats": {
+            "mean": 85.0885309,
+            "stdv": 113.37573921309568
+        },
+        "kexp": {
+            "yield_xform": "(yield-85.0885309)/113.37573921309568"
+        },
+        "outschema": [
+            [
+                "yield_xform",
+                "double"
+            ]
+        ],
+        "inschema": [
+            "yield",
+            "double"
+>>>>>>> 868989ba7e87bb4bd7e5a1c0dbc1bb22b487a947
         ]
-      ]
     },
     "legs": {
-      "function_xform": "inverse",
-      "stats": {},
-      "kexp": {
-        "legs_xform": "if(legs!=0,1/legs,0)"
-      },
-      "inschema": [
-        "legs",
-        "double"
-      ],
-      "outschema": [
-        [
-          "legs_xform",
-          "double"
+        "function_xform": "inverse",
+        "stats": {},
+        "kexp": {
+            "legs_xform": "if(legs!=0,1/legs,0)"
+        },
+        "outschema": [
+            [
+                "legs_xform",
+                "double"
+            ]
+        ],
+        "inschema": [
+            "legs",
+            "double"
         ]
-      ]
     },
     "tag": {
-      "function_xform": "identity",
-      "stats": {},
-      "kexp": {
-        "tag": "tag"
-      },
-      "inschema": [
-        "tag",
-        "string",
-        "char32"
-      ],
-      "outschema": [
-        [
-          "tag",
-          "string"
+        "function_xform": "identity",
+        "stats": {},
+        "kexp": {
+            "tag": "tag"
+        },
+        "outschema": [
+            [
+                "tag",
+                "string"
+            ]
+        ],
+        "inschema": [
+            "tag",
+            "string"
         ]
-      ]
     },
     "speed": {
-      "function_xform": "log",
-      "stats": {},
-      "kexp": {
-        "speed_xform": "log10(speed)"
-      },
-      "inschema": [
-        "speed",
-        "double"
-      ],
-      "outschema": [
-        [
-          "speed_xform",
-          "double"
+        "function_xform": "log",
+        "stats": {},
+        "kexp": {
+            "speed_xform": "log10(speed)"
+        },
+        "outschema": [
+            [
+                "speed_xform",
+                "double"
+            ]
+        ],
+        "inschema": [
+            "speed",
+            "double"
         ]
-      ]
     },
-    "kml::metadata": {
-      "gen_date": "2019-12-30 23:51:47.147",
-      "src_entity_id": 2,
-      "src_entity_name": "Native feature engineering",
-      "src_entity_desc": "On DB transforms"
+    "ipaddress": {
+        "function_xform": "identity",
+        "stats": {},
+        "kexp": {
+            "ipaddress": "ipaddress"
+        },
+        "outschema": [
+            [
+                "ipaddress",
+                "string"
+            ]
+        ],
+        "inschema": [
+            "ipaddress",
+            "string"
+        ]
+    },
+    "subset": {
+        "function_xform": "identity",
+        "stats": {},
+        "kexp": {
+            "subset": "subset"
+        },
+        "outschema": [
+            [
+                "subset",
+                "string"
+            ]
+        ],
+        "inschema": [
+            "subset",
+            "string"
+        ]
+    },
+    "metadata": {
+        "gen_date": "2020-01-22 19:06:38.701",
+        "src_entity_id": 2,
+        "src_entity_name": "Native feature engineering",
+        "src_entity_desc": "On DB transforms"
     }
-  }
+}
