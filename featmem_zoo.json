@@ -124,7 +124,7 @@
         ],
         "inschema": [
             "age",
-            "int"
+            "double"
         ]
     },
     "yield": {
