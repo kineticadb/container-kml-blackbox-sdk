@@ -38,19 +38,21 @@
         ],
         "inschema": [
             "animal",
-            "string"
+            "string",
+            "data",
+            "char32"
         ]
     },
     "happy": {
         "function_xform": "bucket",
         "stats": {
-            "min": -36.0,
+            "min": -316.0,
             "max": 187.0,
             "bins": 5,
-            "div": 44.6
+            "div": 100.6
         },
         "kexp": {
-            "happy_xform": "if(happy<-36.0,0,if(happy>187.0,7,floor(happy/44.6)+1))"
+            "happy_xform": "if((happy--316.0)<0,0,if((happy--316.0)>503.0,7,floor((happy--316.0)/100.6)+1))"
         },
         "outschema": [
             [
@@ -61,7 +63,8 @@
         ],
         "inschema": [
             "happy",
-            "double"
+            "double",
+            "data"
         ]
     },
     "height": {
@@ -78,7 +81,8 @@
         ],
         "inschema": [
             "height",
-            "double"
+            "double",
+            "data"
         ]
     },
     "species": {
@@ -103,7 +107,9 @@
         ],
         "inschema": [
             "species",
-            "string"
+            "string",
+            "data",
+            "char32"
         ]
     },
     "age": {
@@ -114,7 +120,7 @@
             "spread": 229.0
         },
         "kexp": {
-            "age_xform": "(age--42.0)/229.0"
+            "age_xform": "divz((age--42.0),229.0,0)"
         },
         "outschema": [
             [
@@ -124,34 +130,18 @@
         ],
         "inschema": [
             "age",
-            "double"
+            "double",
+            "data"
         ]
     },
     "yield": {
-      "function_xform": "zscale",
-      "stats": {
-        "mean": 120,
-        "stdv": 0
-      },
-      "kexp": {
-        "yield_xform": "(yield-120.0)/1.0"
-      },
-      "inschema": [
-        "yield",
-        "double"
-      ],
-      "outschema": [
-        [
-          "yield_xform",
-          "double"
-=======
         "function_xform": "zscale",
         "stats": {
             "mean": 85.0885309,
             "stdv": 113.37573921309568
         },
         "kexp": {
-            "yield_xform": "(yield-85.0885309)/113.37573921309568"
+            "yield_xform": "divz((yield-85.0885309),113.37573921309568,0)"
         },
         "outschema": [
             [
@@ -161,15 +151,15 @@
         ],
         "inschema": [
             "yield",
-            "double"
->>>>>>> 868989ba7e87bb4bd7e5a1c0dbc1bb22b487a947
+            "double",
+            "data"
         ]
     },
     "legs": {
         "function_xform": "inverse",
         "stats": {},
         "kexp": {
-            "legs_xform": "if(legs!=0,1/legs,0)"
+            "legs_xform": "1/legs"
         },
         "outschema": [
             [
@@ -179,7 +169,8 @@
         ],
         "inschema": [
             "legs",
-            "double"
+            "double",
+            "data"
         ]
     },
     "tag": {
@@ -196,7 +187,9 @@
         ],
         "inschema": [
             "tag",
-            "string"
+            "string",
+            "data",
+            "char32"
         ]
     },
     "speed": {
@@ -213,24 +206,48 @@
         ],
         "inschema": [
             "speed",
-            "double"
+            "double",
+            "data"
         ]
     },
     "ipaddress": {
-        "function_xform": "identity",
+        "function_xform": "octetsplit",
         "stats": {},
         "kexp": {
-            "ipaddress": "ipaddress"
+            "ipaddress": {
+                "ipaddress_1": "cast(split(ipaddress,\".\",1),int16)",
+                "ipaddress_2": "cast(split(ipaddress,\".\",2),int16)",
+                "ipaddress_3": "cast(split(ipaddress,\".\",3),int16)",
+                "ipaddress_4": "cast(split(ipaddress,\".\",4),int16)"
+            }
         },
         "outschema": [
             [
-                "ipaddress",
-                "string"
+                "ipaddress_1",
+                "int",
+                "int16"
+            ],
+            [
+                "ipaddress_2",
+                "int",
+                "int16"
+            ],
+            [
+                "ipaddress_3",
+                "int",
+                "int16"
+            ],
+            [
+                "ipaddress_4",
+                "int",
+                "int16"
             ]
         ],
         "inschema": [
             "ipaddress",
-            "string"
+            "string",
+            "data",
+            "char32"
         ]
     },
     "subset": {
@@ -247,12 +264,14 @@
         ],
         "inschema": [
             "subset",
-            "string"
+            "string",
+            "data",
+            "char8"
         ]
     },
     "metadata": {
-        "gen_date": "2020-01-22 19:06:38.701",
-        "src_entity_id": 2,
+        "gen_date": "2020-02-06 20:34:06.588",
+        "src_entity_id": 22,
         "src_entity_name": "Native feature engineering",
         "src_entity_desc": "On DB transforms"
     }
