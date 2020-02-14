@@ -351,6 +351,83 @@
         }
       ],
       "env_vars": []
+    },
+    {
+      "name": "Kinetica BlackBox Sample: Trivial Function to Test Feature Engineered Inputs",
+      "desc": "Kinetica BlackBox Trivial Function Sample demonstrating features engineered within Kinetica AAW",
+      "bb_module": "bb_module_default",
+      "bb_function": "classify_petworthiness_engineered_inputs",
+      "multiout": false,
+      "feature_memory_file": "featmem_zoo.json",
+      "input_record_type": [
+        {
+          "col_name": "animal_is_other",
+          "col_type": "int|int8",
+          "col_desc": "OHE: Is Animal a non-recognized encoded animal",
+          "col_default_val": "1"
+        },
+        {
+          "col_name": "animal_is_cat",
+          "col_type": "int|int8",
+          "col_desc": "OHE: Is Animal a Cat",
+          "col_default_val": "0"
+        },
+        {
+          "col_name": "animal_is_dog",
+          "col_type": "int|int8",
+          "col_desc": "OHE: Is Animal a Dog",
+          "col_default_val": "0"
+        },
+        {
+          "col_name": "animal_is_grizzly_bear",
+          "col_type": "int|int8",
+          "col_desc": "OHE: Is Animal a Grizzly Bear",
+          "col_default_val": "0"
+        },
+        {
+          "col_name": "happy_xform",
+          "col_type": "int|int16",
+          "col_desc": "Bucketed (by qunitile) Happiness Score"
+        },
+        {
+          "col_name": "height_xform",
+          "col_type": "double",
+          "col_desc": "Natural Log of Height"
+        },
+        {
+          "col_name": "species_xform",
+          "col_type": "int|int16",
+          "col_desc": "Vocabulary Dict-Encoded Species Name"
+        },
+        {
+          "col_name": "age_xform",
+          "col_type": "double",
+          "col_desc": "Normalized Age"
+        },
+        {
+          "col_name": "speed_xform",
+          "col_type": "double",
+          "col_desc": "Log of speed"
+        },
+        {
+          "col_name": "tag_xform",
+          "col_type": "string|store_only",
+          "col_desc": "Identity _transform_"
+        }
+      ],
+      "output_record_type": [
+        {
+          "col_name": "class",
+          "col_type": "int",
+          "col_desc": "Temperature converted to fahrenheit"
+        },
+        {
+          "col_name": "probability",
+          "col_type": "double",
+          "col_desc": "Temperature converted to kelvins"
+        }
+      ],
+      "env_vars": []
     }
   ]
 }

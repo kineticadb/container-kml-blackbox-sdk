@@ -133,3 +133,7 @@ def blackbox_function_envvar_demo(inMap):
         'suminwords': f"{ENVVAR1} {f1+f2} {ENVVAR2}"
         }
     return outMap
+
+def classify_petworthiness_engineered_inputs(inMap):
+    outMap = inMap
+    return outMap
