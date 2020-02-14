@@ -15,7 +15,7 @@ cp Dockerfile Dockerfile.WITH_SPECLABEL
 echo "" >> Dockerfile.WITH_SPECLABEL
 echo "LABEL kinetica.ml.import.spec=\"$importspec\""  >> Dockerfile.WITH_SPECLABEL
 
-docker build -f Dockerfile.WITH_SPECLABEL -t $repo_uri .
+docker build --no-cache=true -f Dockerfile.WITH_SPECLABEL -t $repo_uri .
 
 if [ "$?" -eq "0" ]
 then
