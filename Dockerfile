@@ -8,9 +8,10 @@
 
 FROM python:3.6
 
+LABEL build_date="2020-02-20 11:44:51"
 LABEL maintainer="support@kinetica.com"
 LABEL Description="Kinetica Machine Learning BlackBox SDK and starter examples."
-LABEL Author="Saif Ahmed"
+LABEL Author="Saif Ahmed; Julian Jenkins"
 
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 

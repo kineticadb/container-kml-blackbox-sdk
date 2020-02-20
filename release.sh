@@ -1,6 +1,12 @@
 #! /bin/bash
 
 repo_uri=$(cat repo_uri.info)
+dt=`date +"%Y-%m-%d %T"`
+build_str="LABEL build_date=\"$dt\""
+match="LABEL build_date=.*"
+
+echo $dt" -- "$repo_uri >> docker_release.log
+sed -i "s/$match/$build_str/" Dockerfile
 
 # Removed since Docker Daemon cant handle overly complex double escaped json files for specs
 #python -m sdk.prepper --spec-in spec.json --spec-out spec_enriched.json
