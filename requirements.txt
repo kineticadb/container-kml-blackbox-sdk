@@ -1,4 +1,4 @@
-gpudb
-zmq
-requests
-pandas
+gpudb>=7.0.12.0,<7.1
+pyzmq==18.0.2
+requests==2.22.0
+pandas==0.25.3

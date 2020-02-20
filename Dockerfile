@@ -13,11 +13,16 @@ LABEL maintainer="support@kinetica.com"
 LABEL Description="Kinetica Machine Learning BlackBox SDK and starter examples."
 LABEL Author="Saif Ahmed; Julian Jenkins"
 
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
-
-# These utilities are only for debugging
-# These can safely be removed in PROD settings, if desired
-RUN apt-get install -y git htop wget nano
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+  apt-utils \
+  nano \
+  curl \
+  wget \
+  htop \
+  nmon \
+  vim \
+  httpie \
+  && apt-get clean -y
 
 RUN mkdir -p /opt/gpudb/kml/bbx
 RUN mkdir -p /opt/gpudb/kml/bbx/specs
