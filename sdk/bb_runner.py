@@ -63,6 +63,7 @@ def get_conn_db(db_conn_str, db_user, db_pass):
     else:
         cn_db=gpudb.GPUdb(encoding='BINARY',
                        host=db_conn_str,
+                       primary=db_conn_str,
                        username=db_user,
                        password=db_pass)
     return cn_db
