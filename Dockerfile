@@ -1,4 +1,4 @@
-# Copyright (c) 2019 Kinetica DB Inc.
+# Copyright (c) 2020 Kinetica DB Inc.
 #
 # Kinetica Machine Learning
 # Kinetica Machine Learning BlackBox Container SDK + Trivial Sample

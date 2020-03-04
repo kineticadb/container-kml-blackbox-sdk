@@ -21,7 +21,7 @@ For help with containerizing models, the Kinetica Blackbox Wizard is available v
 
 ## Download and Configuration
 
-Download the Blackbox SDK from GitHub and select a version that is compatible with the current database version. The SDK version should be less than or equal to the current version of the database that the blackbox model will be running against. For example, if Kinetica is at version 7.0.3.0, the SDK tag version should be less than or equal to 7.0.3.0.
+Download the Blackbox SDK from GitHub and select a version that is compatible with the current database version. The SDK version should be less than or equal to the current version of the database that the blackbox model will be running against. For example, if Kinetica is at version 7.0.12.0, the SDK tag version should be less than or equal to 7.0.12.0.
 
 1. Clone the project and change directory into the folder:
 
@@ -122,7 +122,7 @@ After publishing the model, it can be imported into AAW using two methods:
 
 #### REST API
 
-If using the REST API, a model is defined using JSON. The `cURL` command line tool can be used to send a JSON string or file to AAW. To import a blackbox model into AAW using ``cURL`` and the REST API: 
+If using the REST API, a model is defined using JSON. The `cURL` command line tool can be used to send a JSON string or file to AAW. To import a blackbox model into AAW using ``cURL`` and the REST API:
 
 1. Define the model. *Kinetica* recommends placing the model definition inside a local JSON file.
 1. Post the JSON to the `/model/blackbox/instance/create` endpoint of the AAW REST API:
