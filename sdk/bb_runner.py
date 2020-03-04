@@ -96,6 +96,26 @@ def validate_kml_api(api_base, credentials):
     logger.error(f"Could not connect to KML API {api_base}, exhausted tries. Giving up.")
     return False
 
+def phone_home_status(api_base, dep_id, credentials, target_status):
+    if not target_status:
+        raise ValueError("target_status cannot be null")
+
+    if target_status not in ["RUNNING", "FAILED"]:
+        raise ValueError("target_status must be [RUNNING|FAILED]")
+
+    try:
+        phone_home_loc = f"{api_base}/model/deployment/{dep_id}/setstatus"
+        logger.info(f"Phoning home status {target_status} to {phone_home_loc}")
+        r = requests.post(phone_home_loc,
+            auth=credentials,
+            json={"destination-state":target_status})
+
+    except Exception as e:
+        logger.error(e)
+        logger.error(payload)
+        error_type, error, tb = sys.exc_info()
+        logger.error(traceback.format_tb(tb))
+        traceback.print_exc(file=sys.stdout)
 
 def register_event_lifecycle(api_base, credentials, event_sub_type):
 
@@ -278,8 +298,8 @@ if __name__ == '__main__':
     else:
         logger.info(f"All results will be persisted to Audit DB Table {tbl_out_audit} only")
 
-
     register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="READY_TO_INFER")
+    phone_home_status(api_base=KML_API_BASE, dep_id=KML_DEPL_ID, credentials=credentials, target_status="RUNNING")
     while True:
 
         ################################################
