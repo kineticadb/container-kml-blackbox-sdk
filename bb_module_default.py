@@ -3,19 +3,6 @@ import random
 
 import pandas as pd
 
-
-def blackbox_function_default(inMap):
-    outMap = inMap
-    return outMap
-
-def blackbox_function_identity(inMap):
-    outMap = inMap
-    return outMap
-
-def blackbox_function_identity_multiout(inMap):
-    outMap = inMap
-    return [outMap]
-
 def blackbox_function_identity_custom_multiout(inMap):
     rows_out = 1
     if "character" in inMap and inMap["character"]=="Arvin Sloane":

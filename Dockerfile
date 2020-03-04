@@ -8,12 +8,12 @@
 
 FROM python:3.6
 
-LABEL build_date="2020-02-20 11:55:25"
+LABEL build_date="2020-03-04 14:14:06"
 LABEL maintainer="support@kinetica.com"
 LABEL Description="Kinetica Machine Learning BlackBox SDK and starter examples."
 LABEL Author="Saif Ahmed; Julian Jenkins"
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+RUN apt-get update && apt-get install -y \
   apt-utils \
   nano \
   curl \
@@ -30,6 +30,7 @@ WORKDIR "/opt/gpudb/kml/bbx"
 
 # Install Required Libraries and Dependencies
 ADD requirements.txt  ./
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt --no-cache-dir
 
 # Add introspection assets
