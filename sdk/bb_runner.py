@@ -59,11 +59,10 @@ def get_conn_db(db_conn_str, db_user, db_pass):
     logger.info(f"Attempting to connect to DB at {db_conn_str} to push to {tbl_out_audit}")
     if db_user == 'no_cred' or db_pass == 'no_cred':
         cn_db=gpudb.GPUdb(encoding='BINARY',
-                       host=db_conn_str)
+                       host=db_conn_str, primary_host=db_conn_str)
     else:
         cn_db=gpudb.GPUdb(encoding='BINARY',
-                       host=db_conn_str,
-                       primary=db_conn_str,
+                       host=db_conn_str, primary_host=db_conn_str,
                        username=db_user,
                        password=db_pass)
     return cn_db
