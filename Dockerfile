@@ -8,7 +8,7 @@
 
 FROM python:3.6
 
-LABEL build_date="2020-03-04 14:14:06"
+LABEL build_date="2020-03-19 10:34:24"
 LABEL maintainer="support@kinetica.com"
 LABEL Description="Kinetica Machine Learning BlackBox SDK and starter examples."
 LABEL Author="Saif Ahmed; Julian Jenkins"
@@ -42,6 +42,7 @@ ADD sdk ./sdk
 
 ADD bb_module_default.py ./
 ADD bb_module_temperature.py ./
+ADD bb_module_tests.py ./
 
 
 RUN ["chmod", "+x",  "bb_runner.sh"]
