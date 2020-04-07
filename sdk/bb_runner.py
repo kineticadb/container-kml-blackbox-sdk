@@ -30,8 +30,10 @@ def bulk_infer_capable(func):
 logger = logging.getLogger("kml-bbx-sdk")
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handlerC = logging.StreamHandler(sys.stdout)
+handlerC = logging.StreamHandler()
 handlerC.setFormatter(formatter)
+if (logger.hasHandlers()):
+    logger.handlers.clear()
 logger.addHandler(handlerC)
 
 # Build event signature
