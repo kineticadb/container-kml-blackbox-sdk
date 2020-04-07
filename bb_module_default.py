@@ -1,3 +1,4 @@
+import os
 import time
 import random
 
@@ -109,9 +110,11 @@ def blackbox_function_envvar_demo(inMap):
 
     if 'ENVVAR1' not in os.environ:
         raise Exception("Missing environment variable ENVVAR1")
+    ENVVAR1 = os.environ["ENVVAR1"]
 
     if 'ENVVAR2' not in os.environ:
         raise Exception("Missing environment variable ENVVAR2")
+    ENVVAR2 = os.environ["ENVVAR2"]
 
     outMap = {
         'sum':f1+f2,
