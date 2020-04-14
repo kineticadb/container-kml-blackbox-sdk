@@ -55,6 +55,9 @@ def grab_or_die(env_var_key):
         sys.exit(1)
     return os.environ[env_var_key]
 
+def get_tbl_handle(tbl_name, db, schema=None):
+    tbl_ref = tbl_name if not schema else f"{schema}.{tbl_name}"
+    return gpudb.GPUdbTable(name=tbl_ref, db = db)
 
 def get_conn_db(db_conn_str, db_user, db_pass):
     # Prepare DB Communications
@@ -179,6 +182,7 @@ if __name__ == '__main__':
     DB_CONN_STR = grab_or_die("DB_CONN_STR")
     DB_USER = grab_or_die("DB_USER")
     DB_PASS = grab_or_die("DB_PASS")
+    SCHEMA_AUDIT = os.environ.get('SCHEMA_AUDIT', 'kml_audit')
 
     logger.info(f"   KML_API_BASE: {KML_API_BASE}")
     logger.info(f"   DB_CONN_STR: {DB_CONN_STR}")
@@ -290,7 +294,9 @@ if __name__ == '__main__':
     register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="DB_CONNECTED")
 
     # [Re]Establish table handles
-    h_tbl_out_audit = gpudb.GPUdbTable(name = tbl_out_audit, db = cn_db)
+    
+    h_tbl_out_audit = get_tbl_handle(tbl_out_audit, db = cn_db, schema=SCHEMA_AUDIT)
+    #h_tbl_out_audit = gpudb.GPUdbTable(name = tbl_out_audit, db = cn_db)
     h_tbl_out_results = None
     logger.info(f"DB Results Table {tbl_out_results}")
     if tbl_out_results and tbl_out_results != "NOT_APPLICABLE":
