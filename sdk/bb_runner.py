@@ -376,8 +376,8 @@ if __name__ == '__main__':
                 # TODO: actually grab this from insert_records return values, dont assume
                 recs_inf_persisted = len(results_package_list)
 
-                throughput_inf = recs_received/(t_end_inf-t_start_inf)
-                throughput_e2e = recs_received/(t_end_e2e-t_start_e2e)
+                throughput_inf = t_end_inf-t_start_inf
+                throughput_e2e = t_end_e2e-t_start_e2e
 
                 # TODO: examine insert_status and determine if DB insert was a filure
 
