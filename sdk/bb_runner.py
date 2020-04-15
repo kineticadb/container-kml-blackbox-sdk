@@ -56,7 +56,8 @@ def grab_or_die(env_var_key):
     return os.environ[env_var_key]
 
 def get_tbl_handle(tbl_name, db, schema=None):
-    tbl_ref = tbl_name if not schema else f"{schema}.{tbl_name}"
+    #tbl_ref = tbl_name if not schema else f"{schema}.{tbl_name}"
+    tbl_ref = tbl_name
     return gpudb.GPUdbTable(name=tbl_ref, db = db)
 
 def get_conn_db(db_conn_str, db_user, db_pass):
