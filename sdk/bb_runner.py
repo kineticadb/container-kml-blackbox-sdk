@@ -157,6 +157,7 @@ def register_event_metrics(api_base, credentials, seq_id=None, recs_received=Non
         "throughput_e2e": throughput_e2e
         }
 
+
     payload.update(DEFAULT_EVENT_SIG)
 
     try:
@@ -376,12 +377,12 @@ if __name__ == '__main__':
                 # TODO: actually grab this from insert_records return values, dont assume
                 recs_inf_persisted = len(results_package_list)
 
-                throughput_inf = t_end_inf-t_start_inf
-                throughput_e2e = t_end_e2e-t_start_e2e
+                throughput_inf = int(round(1000*(t_end_inf - t_start_inf)))
+                throughput_e2e = int(round(1000*(t_end_e2e - t_start_e2e)))
 
                 # TODO: examine insert_status and determine if DB insert was a filure
 
-                logger.info(f"Completed Processing block request {block_request_count} with throughput {throughput_inf:.7f} inf-per-sec and {throughput_e2e:.7f} e2e-per-sec")
+                logger.info(f"Completed Processing block request {block_request_count} with inference: {throughput_inf}ms on e2e: {throughput_e2e}ms")
 
             except Exception as e:
                 # TODO: As discussed at code review on 3 Jan 2019, push stack trace and input body to store_only field in output table
@@ -390,7 +391,16 @@ if __name__ == '__main__':
                 logger.error(traceback.format_tb(tb))
                 traceback.print_exc(file=sys.stdout)
 
-            register_event_metrics(KML_API_BASE, credentials, seq_id, recs_received, recs_inf_success, recs_inf_failure, recs_inf_persisted, throughput_inf, throughput_e2e)
+            register_event_metrics(api_base=KML_API_BASE, 
+                credentials=credentials, 
+                seq_id=seq_id, 
+                recs_received=recs_received, 
+                recs_relayed=None, 
+                recs_inf_success=recs_inf_success, 
+                recs_inf_failure=recs_inf_failure, 
+                recs_inf_persisted=recs_inf_persisted, 
+                throughput_inf=throughput_inf, 
+                throughput_e2e=throughput_e2e)
 
         ################################################
         # Single-Row (Traditional) Inferencing Case
@@ -470,12 +480,12 @@ if __name__ == '__main__':
                 recs_inf_persisted = len(results_package_list)
                 recs_inf_success = recs_received - recs_inf_failure
 
-                throughput_inf = recs_received/(t_end_inf-t_start_inf)
-                throughput_e2e = recs_received/(t_end_e2e-t_start_e2e)
+                throughput_inf = int(round(1000*(t_end_inf - t_start_inf)))
+                throughput_e2e = int(round(1000*(t_end_e2e - t_start_e2e)))
 
                 # TODO: examine insert_status and determine if DB insert was a failure
 
-                logger.info(f"Completed Processing block request {block_request_count} with throughput {throughput_inf:.7f} inf-per-sec and {throughput_e2e:.7f} e2e-per-sec")
+                logger.info(f"Completed Processing block request {block_request_count} with inference: {throughput_inf}ms on e2e: {throughput_e2e}ms")
 
             except Exception as e:
                 # TODO: As discussed at code review on 3 Jan 2019, push stack trace and input body to store_only field in output table
@@ -484,15 +494,16 @@ if __name__ == '__main__':
                 logger.error(traceback.format_tb(tb))
                 traceback.print_exc(file=sys.stdout)
 
-            register_event_metrics(KML_API_BASE,
-                                   credentials,
-                                   seq_id,
-                                   recs_received,
-                                   recs_inf_success,
-                                   recs_inf_failure,
-                                   recs_inf_persisted,
-                                   throughput_inf,
-                                   throughput_e2e)
+            register_event_metrics(api_base=KML_API_BASE, 
+                credentials=credentials, 
+                seq_id=seq_id, 
+                recs_received=recs_received, 
+                recs_relayed=None, 
+                recs_inf_success=recs_inf_success, 
+                recs_inf_failure=recs_inf_failure, 
+                recs_inf_persisted=recs_inf_persisted, 
+                throughput_inf=throughput_inf, 
+                throughput_e2e=throughput_e2e)
 
 
 if __name__ == '__main__':

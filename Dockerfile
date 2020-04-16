@@ -8,7 +8,7 @@
 
 FROM python:3.6
 
-LABEL build_date="2020-04-14 19:50:35"
+LABEL build_date="2020-04-15 20:51:27"
 LABEL maintainer="support@kinetica.com"
 LABEL Description="Kinetica Machine Learning BlackBox SDK and starter examples."
 LABEL Author="Saif Ahmed; Julian Jenkins"
