@@ -8,7 +8,7 @@
 
 
 # End users are welcome to use any python-3.6 base container of their choice
-FROM kinetica/ctnr-kml-base-cpu:r7.1.0
+FROM kinetica/ctnr-kml-base-cpu:revision01
 
 LABEL maintainer="support@kinetica.com"
 LABEL Description="Kinetica Machine Learning BlackBox SDK and starter examples."
