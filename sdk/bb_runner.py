@@ -256,7 +256,7 @@ if __name__ == '__main__':
     # TODO: also protect input fields
     #protected_fields = infields + ["guid", "receive_dt", "process_start_dt", "process_end_dt"]
 
-    schema_decoder = json.dumps(schema_inbound) #json.loads(json.dumps(schema_inbound))
+    schema_decoder = json.dumps(schema_inbound)
     method_to_call = getattr(__import__(bb_module), bb_method)
     logger.info(f"Dynamically loaded function {bb_method} from module {bb_module} for lambda application")
 
@@ -310,6 +310,8 @@ if __name__ == '__main__':
 
     register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="READY_TO_INFER")
     phone_home_status(api_base=KML_API_BASE, dep_id=KML_DEPL_ID, credentials=credentials, target_status="RUNNING")
+    record_type = gpudb.RecordType.from_type_schema("", schema_decoder, {})
+
     while True:
 
         ################################################
@@ -341,7 +343,9 @@ if __name__ == '__main__':
                 recs_received = parts_received-1
                 #logger.info(f"Processing insert notification with {parts_received-1} frames, block request {block_request_count}")
 
-                results_package_list = gpudb.GPUdbRecord.decode_binary_data(schema_decoder, mpr[1:])
+                #  results_package_list = gpudb.GPUdbRecord.decode_binary_data(schema_decoder, mpr[1:])
+                results_package_list = [dict(x) for x in gpudb.GPUdbRecord.decode_binary_data(record_type, mpr[1:])]
+
                 process_start_dt = datetime.datetime.now().isoformat(' ')[:-3]
                 for mindex, results_package in enumerate(results_package_list):
                     response_count += 1
@@ -431,7 +435,9 @@ if __name__ == '__main__':
                 recs_received = parts_received-1
                 #logger.info(f"Processing insert notification with {parts_received-1} frames, block request {block_request_count}")
 
-                results_package_list = gpudb.GPUdbRecord.decode_binary_data(schema_decoder, mpr[1:])
+                #  results_package_list = gpudb.GPUdbRecord.decode_binary_data(schema_decoder, mpr[1:])
+                results_package_list = [dict(x) for x in gpudb.GPUdbRecord.decode_binary_data(record_type, mpr[1:])]
+
                 process_start_dt = datetime.datetime.now().isoformat(' ')[:-3]
                 for mindex, results_package in enumerate(results_package_list):
                     response_count += 1
