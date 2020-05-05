@@ -32,6 +32,7 @@ ADD sdk ./sdk
 ADD bb_module_default.py ./
 ADD bb_module_temperature.py ./
 ADD bb_module_tests.py ./
+ADD bb_module_stress.py ./
 
 ADD END_USER_LICENSE_AGREEMENT.txt ./
 
