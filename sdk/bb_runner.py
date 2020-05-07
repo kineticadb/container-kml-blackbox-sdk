@@ -58,7 +58,7 @@ def grab_or_die(env_var_key):
 def get_tbl_handle(tbl_name, db, schema=None):
     #tbl_ref = tbl_name if not schema else f"{schema}.{tbl_name}"
     tbl_ref = tbl_name
-    return gpudb.GPUdbTable(name=tbl_ref, db = db)
+    return gpudb.GPUdbTable(name=tbl_ref, db = db, use_multihead_io=True)
 
 def get_conn_db(db_conn_str, db_user, db_pass):
     # Prepare DB Communications
@@ -303,7 +303,7 @@ if __name__ == '__main__':
     h_tbl_out_results = None
     logger.info(f"DB Results Table {tbl_out_results}")
     if tbl_out_results and tbl_out_results != "NOT_APPLICABLE":
-        h_tbl_out_results = gpudb.GPUdbTable(name = tbl_out_results, db = cn_db)
+        h_tbl_out_results = gpudb.GPUdbTable(name = tbl_out_results, db = cn_db, use_multihead_io=True)
         logger.info(f"Established connection to sink table")
         logger.info(f"All results will be persisted to both Audit {tbl_out_audit} and output DB Tables {tbl_out_results}")
     else:
