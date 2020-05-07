@@ -185,6 +185,7 @@ if __name__ == '__main__':
     DB_USER = grab_or_die("DB_USER")
     DB_PASS = grab_or_die("DB_PASS")
     SCHEMA_AUDIT = os.environ.get('SCHEMA_AUDIT', 'kml_audit')
+    PERSIST_AUDIT = str(os.getenv('PERSIST_AUDIT', "TRUE")).upper()
 
     logger.info(f"   KML_API_BASE: {KML_API_BASE}")
     logger.info(f"   DB_CONN_STR: {DB_CONN_STR}")
@@ -369,7 +370,8 @@ if __name__ == '__main__':
                     results_package_list[mindex]["process_end_dt"] = process_end_dt
                     results_package_list[mindex]["success"]=1
 
-                _ = h_tbl_out_audit.insert_records(results_package_list)
+                if PERSIST_AUDIT != "FALSE":
+                    _ = h_tbl_out_audit.insert_records(results_package_list)
                 if h_tbl_out_results is None:
                     logger.info(f"Response sent back to DB audit table")
                 else:
@@ -474,7 +476,8 @@ if __name__ == '__main__':
                     results_package_list[mindex]["process_end_dt"] = datetime.datetime.now().isoformat(' ')[:-3]
                 t_end_inf = time.time()
 
-                _ = h_tbl_out_audit.insert_records(results_package_list)
+                if PERSIST_AUDIT != "FALSE":
+                    _ = h_tbl_out_audit.insert_records(results_package_list)
                 if h_tbl_out_results is None:
                     logger.info(f"Response sent back to DB audit table")
                 else:
