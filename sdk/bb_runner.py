@@ -1,14 +1,10 @@
 import os
 import sys
 import time
-import warnings
 import traceback
 import json
-import collections
 import datetime
-import uuid
 import logging
-import pprint
 import copy
 import logging
 
@@ -20,6 +16,7 @@ from requests.exceptions import ConnectionError
 ###############################################################################
 # For use by SDK Clients
 # Use this decorator if you wish to declare a black box function bulk capable
+
 def bulk_infer_capable(func):
     def inner(inMap):
         return func(inMap)
@@ -49,6 +46,7 @@ DEFAULT_EVENT_SIG = {"deployment_id": env_dep_id,
                      "reporter_type": "WORKER",
                      "k8s_pod_name": env_pod_name}
 
+
 # Grab environment variables or die trying
 def grab_or_die(env_var_key):
     if env_var_key not in os.environ:
@@ -56,6 +54,7 @@ def grab_or_die(env_var_key):
                      f"variable. Cannot proceed.")
         sys.exit(1)
     return os.environ[env_var_key]
+
 
 def get_tbl_handle(tbl_name, db, schema=None):
     #tbl_ref = tbl_name if not schema else f"{schema}.{tbl_name}"
@@ -66,17 +65,20 @@ def get_tbl_handle(tbl_name, db, schema=None):
                             #  multihead_ingest_batch_size=10000,
                             flush_multi_head_ingest_per_insertion=True)
 
+
 def get_conn_db(db_conn_str, db_user, db_pass):
     # Prepare DB Communications
     logger.info(f"Attempting to connect to DB at {db_conn_str} to push to {tbl_out_audit}")
     if db_user == 'no_cred' or db_pass == 'no_cred':
-        cn_db=gpudb.GPUdb(encoding='BINARY',
-                       host=db_conn_str, primary_host=db_conn_str)
+        cn_db = gpudb.GPUdb(encoding='BINARY',
+                            host=db_conn_str,
+                            primary_host=db_conn_str)
     else:
-        cn_db=gpudb.GPUdb(encoding='BINARY',
-                       host=db_conn_str, primary_host=db_conn_str,
-                       username=db_user,
-                       password=db_pass)
+        cn_db = gpudb.GPUdb(encoding='BINARY',
+                            host=db_conn_str,
+                            primary_host=db_conn_str,
+                            username=db_user,
+                            password=db_pass)
     return cn_db
 
 
@@ -108,6 +110,7 @@ def validate_kml_api(api_base, credentials):
     logger.error(f"Could not connect to KML API {api_base}, exhausted tries. Giving up.")
     return False
 
+
 def phone_home_status(api_base, dep_id, credentials, target_status):
     if not target_status:
         raise ValueError("target_status cannot be null")
@@ -119,22 +122,22 @@ def phone_home_status(api_base, dep_id, credentials, target_status):
         phone_home_loc = f"{api_base}/model/deployment/{dep_id}/setstatus"
         logger.info(f"Phoning home status {target_status} to {phone_home_loc}")
         r = requests.post(phone_home_loc,
-            auth=credentials,
-            json={"destination-state":target_status})
+                          auth=credentials,
+                          json={"destination-state": target_status})
 
     except Exception as e:
         logger.error(e)
-        logger.error(payload)
         error_type, error, tb = sys.exc_info()
         logger.error(traceback.format_tb(tb))
         traceback.print_exc(file=sys.stdout)
+
 
 def register_event_lifecycle(api_base, credentials, event_sub_type):
 
     payload = {
         "event_type": "LIFECYCLE",
         "event_sub_type": event_sub_type,
-        }
+    }
 
     payload.update(DEFAULT_EVENT_SIG)
 
@@ -217,14 +220,12 @@ if __name__ == '__main__':
         credentials = None
         logger.info("   DB Connection will be w/o authentication (debug mode)")
 
-
     register_event_lifecycle(api_base=KML_API_BASE,
                              credentials=credentials,
                              event_sub_type="INITIALIZING")
 
-
     # Things we default, but can capture in as environment variables
-    be_quiet = True if (os.environ.get('be_quiet') and os.environ.get('be_quiet').upper()=="TRUE") else False
+    be_quiet = True if (os.environ.get('be_quiet') and os.environ.get('be_quiet').upper() == "TRUE") else False
     if be_quiet:
         logger.setLevel(logging.ERROR)
 
@@ -276,7 +277,7 @@ if __name__ == '__main__':
 
     protected_fields = ["guid", "receive_dt", "process_start_dt", "process_end_dt"]
     # TODO: also protect input fields
-    #protected_fields = infields + ["guid", "receive_dt", "process_start_dt", "process_end_dt"]
+    # protected_fields = infields + ["guid", "receive_dt", "process_start_dt", "process_end_dt"]
 
     schema_decoder = json.dumps(schema_inbound)
     method_to_call = getattr(__import__(bb_module), bb_method)
@@ -294,15 +295,15 @@ if __name__ == '__main__':
         logger.info("   Employing Single-Row (Traditional Mode) Infer")
 
     block_request_count = 0
-    response_count=0
-    default_results_subdict={
-        "success":0,
+    response_count = 0
+    default_results_subdict = {
+        "success": 0,
         "errorlog": None,
         "errorstack": None,
         "process_end_dt": None
-        }
+    }
     for outf in outfields:
-        default_results_subdict[outf]=None
+        default_results_subdict[outf] = None
 
     # TODO Put these connection activities into a higher-level giant try-catch
     #    to re-connect upon failures
@@ -336,9 +337,8 @@ if __name__ == '__main__':
                              event_sub_type="DB_CONNECTED")
 
     # [Re]Establish table handles
-    
-    h_tbl_out_audit = get_tbl_handle(tbl_out_audit, db = cn_db, schema=SCHEMA_AUDIT)
-    #h_tbl_out_audit = gpudb.GPUdbTable(name=tbl_out_audit, db=cn_db)
+
+    h_tbl_out_audit = get_tbl_handle(tbl_out_audit, db=cn_db, schema=SCHEMA_AUDIT)
     h_tbl_out_results = None
     logger.info(f"DB Results Table {tbl_out_results}")
     if tbl_out_results and tbl_out_results != "NOT_APPLICABLE":
@@ -378,8 +378,11 @@ if __name__ == '__main__':
             # Reset all metrics until we get the next batch
             seq_id = None
             recs_received = None
-            recs_inf_success = -1 # with multi-row inference, there is no easy way to discern success or failure, though one could assume all-or-none
-            recs_inf_failure = -1 # with multi-row inference, there is no easy way to discern success or failure, though one could assume all-or-none
+
+            # with multi-row inference, there is no easy way to discern success
+            # or failure, though one could assume all-or-none
+            recs_inf_success = -1
+            recs_inf_failure = -1
             recs_inf_persisted = None
             throughput_inf = None
             throughput_e2e = None
@@ -416,7 +419,7 @@ if __name__ == '__main__':
                 t_end_inf = time.time()
 
                 # we can assume everything was successful, a moderately OK assumption
-                recs_inf_success = recs_received 
+                recs_inf_success = recs_received
                 recs_inf_failure = 0
 
                 process_end_dt = datetime.datetime.now().isoformat(' ')[:-3]
@@ -428,7 +431,7 @@ if __name__ == '__main__':
 
                     results_package_list[mindex].update(outMaps[mindex])
                     results_package_list[mindex]["process_end_dt"] = process_end_dt
-                    results_package_list[mindex]["success"]=1
+                    results_package_list[mindex]["success"] = 1
 
                 if PERSIST_AUDIT != "FALSE":
                     _ = h_tbl_out_audit.insert_records(results_package_list)
@@ -459,16 +462,18 @@ if __name__ == '__main__':
                 logger.error(traceback.format_tb(tb))
                 traceback.print_exc(file=sys.stdout)
 
-            register_event_metrics(api_base=KML_API_BASE, 
-                credentials=credentials, 
-                seq_id=seq_id, 
-                recs_received=recs_received, 
-                recs_relayed=None, 
-                recs_inf_success=recs_inf_success, 
-                recs_inf_failure=recs_inf_failure, 
-                recs_inf_persisted=recs_inf_persisted, 
-                throughput_inf=throughput_inf, 
-                throughput_e2e=throughput_e2e)
+            register_event_metrics(
+                api_base=KML_API_BASE,
+                credentials=credentials,
+                seq_id=seq_id,
+                recs_received=recs_received,
+                recs_relayed=None,
+                recs_inf_success=recs_inf_success,
+                recs_inf_failure=recs_inf_failure,
+                recs_inf_persisted=recs_inf_persisted,
+                throughput_inf=throughput_inf,
+                throughput_e2e=throughput_e2e
+            )
 
         ################################################
         # Single-Row (Traditional) Inferencing Case
@@ -516,10 +521,14 @@ if __name__ == '__main__':
                 t_start_inf = time.time()
                 for mindex, results_package in enumerate(results_package_list):
                     try:
-                        outMap = method_to_call(copy.deepcopy(results_package_list[mindex]))
+                        outMap = method_to_call(
+                            copy.deepcopy(results_package_list[mindex])
+                        )
                         if not isinstance(outMap, list):
-                            # TODO: Consider force exceptioning on this case and forcing users to fix this
-                            #logger.warn ("Received lone dictionary function output, force listifying")
+                            # TODO: Consider force exceptioning on this case and
+                            # forcing users to fix this
+                            #  logger.warn ("Received lone dictionary function output, "
+                            #               "force listifying")
                             outMap = [outMap,]
 
                         # Protected fields cannot be overwritten by blackbox function
@@ -529,16 +538,16 @@ if __name__ == '__main__':
 
                         # TODO: Problem! This doesnt handle multi-out case!
                         results_package_list[mindex].update(outMap[0])
-                        results_package_list[mindex]["success"]=1
+                        results_package_list[mindex]["success"] = 1
                     except Exception as e:
                         recs_inf_failure += 1
                         logger.error(e)
                         error_type, error, tb = sys.exc_info()
                         logger.error(traceback.format_tb(tb))
                         traceback.print_exc(file=sys.stdout)
-                        results_package_list[mindex]["errorstack"]="\n".join(traceback.format_tb(tb))
+                        results_package_list[mindex]["errorstack"] = "\n".join(traceback.format_tb(tb))
                         if e:
-                            results_package_list[mindex]["errorlog"]=str(e)
+                            results_package_list[mindex]["errorlog"] = str(e)
                     results_package_list[mindex]["process_end_dt"] = datetime.datetime.now().isoformat(' ')[:-3]
                 t_end_inf = time.time()
 
@@ -565,28 +574,31 @@ if __name__ == '__main__':
                             f"{throughput_e2e}ms")
 
             except Exception as e:
-                # TODO: As discussed at code review on 3 Jan 2019, push stack trace and input body to store_only field in output table
+                # TODO: As discussed at code review on 3 Jan 2019, push stack
+                # trace and input body to store_only field in output table
                 logger.error(e)
                 error_type, error, tb = sys.exc_info()
                 logger.error(traceback.format_tb(tb))
                 traceback.print_exc(file=sys.stdout)
 
-            register_event_metrics(api_base=KML_API_BASE, 
-                credentials=credentials, 
-                seq_id=seq_id, 
-                recs_received=recs_received, 
-                recs_relayed=None, 
-                recs_inf_success=recs_inf_success, 
-                recs_inf_failure=recs_inf_failure, 
-                recs_inf_persisted=recs_inf_persisted, 
-                throughput_inf=throughput_inf, 
-                throughput_e2e=throughput_e2e)
+            register_event_metrics(
+                api_base=KML_API_BASE,
+                credentials=credentials,
+                seq_id=seq_id,
+                recs_received=recs_received,
+                recs_relayed=None,
+                recs_inf_success=recs_inf_success,
+                recs_inf_failure=recs_inf_failure,
+                recs_inf_persisted=recs_inf_persisted,
+                throughput_inf=throughput_inf,
+                throughput_e2e=throughput_e2e
+            )
 
 
-if __name__ == '__main__':
-    main()
+#  if __name__ == '__main__':
+#      main()
 
-    # TODO: Really, we should *never* exit. So if we exit, that is a failure already
-    # The only "exit" would be if we are terminated externally via REST API
-    logger.warn("Exiting container. Hopefully this was user-initiated from REST API.")
-    sys.exit(1)
+#      # TODO: Really, we should *never* exit. So if we exit, that is a failure already
+#      # The only "exit" would be if we are terminated externally via REST API
+#      logger.warn("Exiting container. Hopefully this was user-initiated from REST API.")
+#      sys.exit(1)
