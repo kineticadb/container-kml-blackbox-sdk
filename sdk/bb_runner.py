@@ -42,13 +42,12 @@ env_dep_id = os.environ.get('KML_DEPL_ID')
 pt = env_pod_name.split('-')
 dep_name = '-'.join([pt[0], pt[1], pt[2]])
 
-ZMQ_HEARBEAT = 900
+ZMQ_HEARTBEAT = 900
 
 DEFAULT_EVENT_SIG = {"deployment_id": env_dep_id,
                      "deployment_name": dep_name,
                      "reporter_type": "WORKER",
                      "k8s_pod_name": env_pod_name}
-
 
 # Grab environment variables or die trying
 def grab_or_die(env_var_key):
@@ -61,7 +60,11 @@ def grab_or_die(env_var_key):
 def get_tbl_handle(tbl_name, db, schema=None):
     #tbl_ref = tbl_name if not schema else f"{schema}.{tbl_name}"
     tbl_ref = tbl_name
-    return gpudb.GPUdbTable(name=tbl_ref, db = db, use_multihead_io=True)
+    return gpudb.GPUdbTable(name=tbl_ref,
+                            db=db,
+                            use_multihead_io=True,
+                            #  multihead_ingest_batch_size=10000,
+                            flush_multi_head_ingest_per_insertion=True)
 
 def get_conn_db(db_conn_str, db_user, db_pass):
     # Prepare DB Communications
@@ -342,7 +345,9 @@ if __name__ == '__main__':
         h_tbl_out_results = gpudb.GPUdbTable(
             name=tbl_out_results,
             db=cn_db,
-            use_multihead_io=True
+            use_multihead_io=True,
+            #  multihead_ingest_batch_size=10000,
+            flush_multi_head_ingest_per_insertion=True
         )
         logger.info(f"Established connection to sink table")
         logger.info(f"All results will be persisted to both Audit {tbl_out_audit} "
