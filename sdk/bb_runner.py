@@ -42,6 +42,8 @@ env_dep_id = os.environ.get('KML_DEPL_ID')
 pt = env_pod_name.split('-')
 dep_name = '-'.join([pt[0], pt[1], pt[2]])
 
+ZMQ_HEARBEAT = 900
+
 DEFAULT_EVENT_SIG = {"deployment_id": env_dep_id,
                      "deployment_name": dep_name,
                      "reporter_type": "WORKER",
@@ -51,7 +53,8 @@ DEFAULT_EVENT_SIG = {"deployment_id": env_dep_id,
 # Grab environment variables or die trying
 def grab_or_die(env_var_key):
     if env_var_key not in os.environ:
-        logger.error(f"Could not find {env_var_key} environment variable. Cannot proceed.")
+        logger.error(f"Could not find {env_var_key} environment "
+                     f"variable. Cannot proceed.")
         sys.exit(1)
     return os.environ[env_var_key]
 
@@ -133,7 +136,9 @@ def register_event_lifecycle(api_base, credentials, event_sub_type):
     payload.update(DEFAULT_EVENT_SIG)
 
     try:
-        r = requests.post(f"{api_base}/admin/events/register", auth=credentials, json=payload)
+        r = requests.post(f"{api_base}/admin/events/register",
+                          auth=credentials,
+                          json=payload)
 
     except Exception as e:
         logger.error(e)
@@ -143,7 +148,10 @@ def register_event_lifecycle(api_base, credentials, event_sub_type):
         traceback.print_exc(file=sys.stdout)
 
 
-def register_event_metrics(api_base, credentials, seq_id=None, recs_received=None, recs_relayed=None, recs_inf_success=None, recs_inf_failure=None, recs_inf_persisted=None, throughput_inf=None, throughput_e2e=None):
+def register_event_metrics(api_base, credentials, seq_id=None, recs_received=None,
+                           recs_relayed=None, recs_inf_success=None,
+                           recs_inf_failure=None, recs_inf_persisted=None,
+                           throughput_inf=None, throughput_e2e=None):
 
     payload = {
         "event_type": "METRICS",
@@ -155,13 +163,14 @@ def register_event_metrics(api_base, credentials, seq_id=None, recs_received=Non
         "recs_inf_persisted": recs_inf_persisted,
         "throughput_inf": throughput_inf,
         "throughput_e2e": throughput_e2e
-        }
-
+    }
 
     payload.update(DEFAULT_EVENT_SIG)
 
     try:
-        r = requests.post(f"{api_base}/admin/events/register", auth=credentials, json=payload)
+        r = requests.post(f"{api_base}/admin/events/register",
+                          auth=credentials,
+                          json=payload)
 
     except Exception as e:
         logger.error(e)
@@ -206,7 +215,9 @@ if __name__ == '__main__':
         logger.info("   DB Connection will be w/o authentication (debug mode)")
 
 
-    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="INITIALIZING")
+    register_event_lifecycle(api_base=KML_API_BASE,
+                             credentials=credentials,
+                             event_sub_type="INITIALIZING")
 
 
     # Things we default, but can capture in as environment variables
@@ -214,7 +225,9 @@ if __name__ == '__main__':
     if be_quiet:
         logger.setLevel(logging.ERROR)
 
-    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="DEP_DETAILS_OBTAINING")
+    register_event_lifecycle(api_base=KML_API_BASE,
+                             credentials=credentials,
+                             event_sub_type="DEP_DETAILS_OBTAINING")
     dep_details_uri = f"{KML_API_BASE}/model/deployment/{KML_DEPL_ID}/view"
     logger.info(f"Deployment details from {dep_details_uri}, attempting connection...")
     if not validate_kml_api(KML_API_BASE, credentials):
@@ -226,13 +239,16 @@ if __name__ == '__main__':
         logger.error(f"Could not find deployment with id {KML_DEPL_ID}")
         sys.exit(1)
     dep_details = dep_details_resp.json()
-    logger.info(f"Deployment details from {dep_details_uri}, successfully obtained deployment details")
+    logger.info(f"Deployment details from {dep_details_uri}, "
+                f"successfully obtained deployment details")
 
     if 'success' not in dep_details or not dep_details['success']:
         logger.error(f"Could not find live deployment with id {KML_DEPL_ID}")
         sys.exit(1)
 
-    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="DEP_DETAILS_RECEIVED")
+    register_event_lifecycle(api_base=KML_API_BASE,
+                             credentials=credentials,
+                             event_sub_type="DEP_DETAILS_RECEIVED")
 
     bb_module = dep_details["response"]["item"]["base_model_inst"]["model_inst_config"]["blackbox_module"]
     bb_method = dep_details["response"]["item"]["base_model_inst"]["model_inst_config"]["blackbox_function"]
@@ -242,7 +258,9 @@ if __name__ == '__main__':
     output_record_list = dep_details["response"]["item"]["base_model_inst"]["model_inst_config"]["output_record_type"]
     outfields = [arec["col_name"] for arec in output_record_list]
 
-    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="DEP_DETAILS_PROCESSED")
+    register_event_lifecycle(api_base=KML_API_BASE,
+                             credentials=credentials,
+                             event_sub_type="DEP_DETAILS_PROCESSED")
 
     logger.info(f"bb_module: {bb_module}")
     logger.info(f"bb_method: {bb_method}")
@@ -259,7 +277,8 @@ if __name__ == '__main__':
 
     schema_decoder = json.dumps(schema_inbound)
     method_to_call = getattr(__import__(bb_module), bb_method)
-    logger.info(f"Dynamically loaded function {bb_method} from module {bb_module} for lambda application")
+    logger.info(f"Dynamically loaded function {bb_method} from "
+                f"module {bb_module} for lambda application")
 
     BLACKBOX_MULTIROW_INFER = False
     if 'BULK_INFER_CAPABLE' in dir(method_to_call):
@@ -285,32 +304,62 @@ if __name__ == '__main__':
     # TODO Put these connection activities into a higher-level giant try-catch
     #    to re-connect upon failures
     # In case of a ZMQ connection failure
-    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="ZMQ_CONNECTING")
+    register_event_lifecycle(api_base=KML_API_BASE,
+                             credentials=credentials,
+                             event_sub_type="ZMQ_CONNECTING")
+
+    logger.info('ZMQ socket: Configuring')
     context = zmq.Context()
     socket = context.socket(zmq.PULL)
+    socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
+    socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, ZMQ_HEARTBEAT)
+    socket.setsockopt(zmq.TCP_KEEPALIVE_INTVL, ZMQ_HEARTBEAT)
+    logger.info(f"ZMQ socket: Keep-alive heartbeat set to {ZMQ_HEARTBEAT} sec")
+    logger.info('ZMQ socket: Succesfully configured')
     socket.connect(ZMQ_CONN_STR)
-    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="ZMQ_CONNECTED")
+    logger.info('ZMQ socket: Successfully connected')
+
+    register_event_lifecycle(api_base=KML_API_BASE,
+                             credentials=credentials,
+                             event_sub_type="ZMQ_CONNECTED")
 
     # Prepare DB Connection
-    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="DB_CONNECTING")
+    register_event_lifecycle(api_base=KML_API_BASE,
+                             credentials=credentials,
+                             event_sub_type="DB_CONNECTING")
     cn_db = get_conn_db(DB_CONN_STR, DB_USER, DB_PASS)
-    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="DB_CONNECTED")
+    register_event_lifecycle(api_base=KML_API_BASE,
+                             credentials=credentials,
+                             event_sub_type="DB_CONNECTED")
 
     # [Re]Establish table handles
     
     h_tbl_out_audit = get_tbl_handle(tbl_out_audit, db = cn_db, schema=SCHEMA_AUDIT)
-    #h_tbl_out_audit = gpudb.GPUdbTable(name = tbl_out_audit, db = cn_db)
+    #h_tbl_out_audit = gpudb.GPUdbTable(name=tbl_out_audit, db=cn_db)
     h_tbl_out_results = None
     logger.info(f"DB Results Table {tbl_out_results}")
     if tbl_out_results and tbl_out_results != "NOT_APPLICABLE":
-        h_tbl_out_results = gpudb.GPUdbTable(name = tbl_out_results, db = cn_db, use_multihead_io=True)
+        h_tbl_out_results = gpudb.GPUdbTable(
+            name=tbl_out_results,
+            db=cn_db,
+            use_multihead_io=True
+        )
         logger.info(f"Established connection to sink table")
-        logger.info(f"All results will be persisted to both Audit {tbl_out_audit} and output DB Tables {tbl_out_results}")
+        logger.info(f"All results will be persisted to both Audit {tbl_out_audit} "
+                    f"and output DB Tables {tbl_out_results}")
     else:
-        logger.info(f"All results will be persisted to Audit DB Table {tbl_out_audit} only")
+        logger.info(f"All results will be persisted to Audit DB "
+                    f"Table {tbl_out_audit} only")
 
-    register_event_lifecycle(api_base=KML_API_BASE, credentials=credentials, event_sub_type="READY_TO_INFER")
-    phone_home_status(api_base=KML_API_BASE, dep_id=KML_DEPL_ID, credentials=credentials, target_status="RUNNING")
+    register_event_lifecycle(api_base=KML_API_BASE,
+                             credentials=credentials,
+                             event_sub_type="READY_TO_INFER")
+
+    phone_home_status(api_base=KML_API_BASE,
+                      dep_id=KML_DEPL_ID,
+                      credentials=credentials,
+                      target_status="RUNNING")
+
     record_type = gpudb.RecordType.from_type_schema("", schema_decoder, {})
 
     while True:
@@ -340,12 +389,16 @@ if __name__ == '__main__':
                 t_start_e2e = time.time()
 
                 parts_received = len(mpr)
-                logger.info(f"Received inbound request number {block_request_count} with {parts_received-1} frames")
+                logger.info(f"Received inbound request number {block_request_count} "
+                            f"with {parts_received-1} frames")
                 recs_received = parts_received-1
-                #logger.info(f"Processing insert notification with {parts_received-1} frames, block request {block_request_count}")
 
-                #  results_package_list = gpudb.GPUdbRecord.decode_binary_data(schema_decoder, mpr[1:])
-                results_package_list = [dict(x) for x in gpudb.GPUdbRecord.decode_binary_data(record_type, mpr[1:])]
+                results_package_list = [
+                    dict(x) for x in gpudb.GPUdbRecord.decode_binary_data(
+                        record_type,
+                        mpr[1:]
+                    )
+                ]
 
                 process_start_dt = datetime.datetime.now().isoformat(' ')[:-3]
                 for mindex, results_package in enumerate(results_package_list):
@@ -356,7 +409,9 @@ if __name__ == '__main__':
                 t_start_inf = time.time()
                 outMaps = method_to_call(copy.deepcopy(results_package_list))
                 t_end_inf = time.time()
-                recs_inf_success = recs_received # we can assume everything was successful, a moderately OK assumption
+
+                # we can assume everything was successful, a moderately OK assumption
+                recs_inf_success = recs_received 
                 recs_inf_failure = 0
 
                 process_end_dt = datetime.datetime.now().isoformat(' ')[:-3]
@@ -388,7 +443,9 @@ if __name__ == '__main__':
 
                 # TODO: examine insert_status and determine if DB insert was a filure
 
-                logger.info(f"Completed Processing block request {block_request_count} with inference: {throughput_inf}ms on e2e: {throughput_e2e}ms")
+                logger.info(f"Completed Processing block request "
+                            f"{block_request_count} with inference: "
+                            f"{throughput_inf}ms on e2e: {throughput_e2e}ms")
 
             except Exception as e:
                 # TODO: As discussed at code review on 3 Jan 2019, push stack trace and input body to store_only field in output table
@@ -433,12 +490,16 @@ if __name__ == '__main__':
                 t_start_e2e = time.time()
 
                 parts_received = len(mpr)
-                logger.info(f"Received inbound request number {block_request_count} with {parts_received-1} frames")
+                logger.info(f"Received inbound request number {block_request_count} "
+                            f"with {parts_received-1} frames")
                 recs_received = parts_received-1
-                #logger.info(f"Processing insert notification with {parts_received-1} frames, block request {block_request_count}")
 
-                #  results_package_list = gpudb.GPUdbRecord.decode_binary_data(schema_decoder, mpr[1:])
-                results_package_list = [dict(x) for x in gpudb.GPUdbRecord.decode_binary_data(record_type, mpr[1:])]
+                results_package_list = [
+                    dict(x) for x in gpudb.GPUdbRecord.decode_binary_data(
+                        record_type,
+                        mpr[1:]
+                    )
+                ]
 
                 process_start_dt = datetime.datetime.now().isoformat(' ')[:-3]
                 for mindex, results_package in enumerate(results_package_list):
@@ -494,7 +555,9 @@ if __name__ == '__main__':
 
                 # TODO: examine insert_status and determine if DB insert was a failure
 
-                logger.info(f"Completed Processing block request {block_request_count} with inference: {throughput_inf}ms on e2e: {throughput_e2e}ms")
+                logger.info(f"Completed Processing block request {block_request_count} "
+                            f"with inference: {throughput_inf}ms on e2e: "
+                            f"{throughput_e2e}ms")
 
             except Exception as e:
                 # TODO: As discussed at code review on 3 Jan 2019, push stack trace and input body to store_only field in output table
