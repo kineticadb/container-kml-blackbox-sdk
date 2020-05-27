@@ -14,18 +14,6 @@
   "screenshot_urls": [],
   "functions": [
     {
-      "name": "Trivial Sample BlackBox function demonstrating function with no required params",
-      "desc": "Trivial Sample BlackBox function demonstrating function with no required params. Note that non-required parameters can still be passed through on the inbound dictionary.",
-      "bb_module": "bb_module_default",
-      "bb_function": "blackbox_function_default",
-      "input_record_type": [],
-      "output_record_type": [],
-      "env_vars": [],
-      "compute-support": [
-        "CPU"
-      ]
-    },
-    {
       "name": "Identity function",
       "desc": "Identity function - what goes in must come out",
       "bb_module": "bb_module_default",
