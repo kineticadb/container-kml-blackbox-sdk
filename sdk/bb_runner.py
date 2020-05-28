@@ -534,8 +534,8 @@ if __name__ == '__main__':
                             #               "force listifying")
                             outMap = [outMap,]
 
-                        logger.info("Outputs Received")
-                        logger.info(pprint.pformat(outMap, indent=4))
+                        #logger.info("Outputs Received")
+                        #logger.info(pprint.pformat(outMap, indent=4))
                         # Loop, in case of multi-out scenarios
                         for outMapItem in outMap:
                             # Protected fields cannot be overwritten by blackbox function
@@ -568,8 +568,8 @@ if __name__ == '__main__':
                         response_count += 1
                         results_persistable.append(persistable)
                     
-                logger.info("Final persistable")
-                logger.info(pprint.pformat(results_persistable, indent=4))
+                #logger.info("Final persistable")
+                #logger.info(pprint.pformat(results_persistable, indent=4))
 
                 t_end_inf = time.time()
 
