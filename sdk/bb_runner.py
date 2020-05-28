@@ -7,6 +7,7 @@ import datetime
 import logging
 import copy
 import logging
+import pprint
 
 import zmq
 import gpudb
@@ -531,13 +532,17 @@ if __name__ == '__main__':
                             #               "force listifying")
                             outMap = [outMap,]
 
-                        # Protected fields cannot be overwritten by blackbox function
-                        for pf in protected_fields:
-                            if pf in outMap[0]:
-                                outMap[0].pop(pf)
+                        logger.info("Outputs Received")
+                        logger.info(pprint.pformat(outMap, indent=4))
+                        # Loop, in case of multi-out scenarios
+                        for outMapItem in outMap:
+                            # Protected fields cannot be overwritten by blackbox function
+                            for pf in protected_fields:
+                                if pf in outMapItem:
+                                    outMapItem.pop(pf)
 
-                        # TODO: Problem! This doesnt handle multi-out case!
-                        results_package_list[mindex].update(outMap[0])
+                            # TODO: Problem! This doesnt handle multi-out case!
+                            results_package_list[mindex].update(outMapItem)
                         results_package_list[mindex]["success"] = 1
                     except Exception as e:
                         recs_inf_failure += 1
@@ -549,6 +554,9 @@ if __name__ == '__main__':
                         if e:
                             results_package_list[mindex]["errorlog"] = str(e)
                     results_package_list[mindex]["process_end_dt"] = datetime.datetime.now().isoformat(' ')[:-3]
+                logger.info("Final persistable")
+                logger.info(pprint.pformat(results_package_list, indent=4))
+
                 t_end_inf = time.time()
 
                 if PERSIST_AUDIT != "FALSE":
