@@ -512,11 +512,13 @@ if __name__ == '__main__':
                     )
                 ]
 
+                results_persistable = []
+
                 process_start_dt = datetime.datetime.now().isoformat(' ')[:-3]
-                for mindex, results_package in enumerate(results_package_list):
-                    response_count += 1
-                    results_package_list[mindex].update(default_results_subdict)
-                    results_package_list[mindex]["process_start_dt"] = process_start_dt
+                #for mindex, results_package in enumerate(results_package_list):
+                #    response_count += 1
+                #    results_package_list[mindex].update(default_results_subdict)
+                #    results_package_list[mindex]["process_start_dt"] = process_start_dt
 
                 recs_inf_failure = 0
                 t_start_inf = time.time()
@@ -541,30 +543,42 @@ if __name__ == '__main__':
                                 if pf in outMapItem:
                                     outMapItem.pop(pf)
 
-                            # TODO: Problem! This doesnt handle multi-out case!
-                            results_package_list[mindex].update(outMapItem)
-                        results_package_list[mindex]["success"] = 1
+                            persistable = copy.deepcopy(results_package_list[mindex])
+                            persistable.update(default_results_subdict)
+                            persistable["process_start_dt"] = process_start_dt
+                            persistable["process_end_dt"] = datetime.datetime.now().isoformat(' ')[:-3]
+                            persistable.update(outMapItem)
+                            persistable["success"] = 1
+                            response_count += 1
+                            results_persistable.append(persistable)
                     except Exception as e:
                         recs_inf_failure += 1
                         logger.error(e)
                         error_type, error, tb = sys.exc_info()
                         logger.error(traceback.format_tb(tb))
                         traceback.print_exc(file=sys.stdout)
-                        results_package_list[mindex]["errorstack"] = "\n".join(traceback.format_tb(tb))
+
+                        persistable = copy.deepcopy(results_package_list[mindex])
+                        persistable.update(default_results_subdict)
+                        persistable["process_start_dt"] = process_start_dt
+                        persistable["process_end_dt"] = datetime.datetime.now().isoformat(' ')[:-3]
+                        persistable["errorstack"] = "\n".join(traceback.format_tb(tb))
                         if e:
-                            results_package_list[mindex]["errorlog"] = str(e)
-                    results_package_list[mindex]["process_end_dt"] = datetime.datetime.now().isoformat(' ')[:-3]
+                            persistable["errorlog"] = str(e)
+                        response_count += 1
+                        results_persistable.append(persistable)
+                    
                 logger.info("Final persistable")
-                logger.info(pprint.pformat(results_package_list, indent=4))
+                logger.info(pprint.pformat(results_persistable, indent=4))
 
                 t_end_inf = time.time()
 
                 if PERSIST_AUDIT != "FALSE":
-                    _ = h_tbl_out_audit.insert_records(results_package_list)
+                    _ = h_tbl_out_audit.insert_records(results_persistable)
                 if h_tbl_out_results is None:
                     logger.info(f"Response sent back to DB audit table")
                 else:
-                    _ = h_tbl_out_results.insert_records(results_package_list)
+                    _ = h_tbl_out_results.insert_records(results_persistable)
                     logger.info(f"Response sent back to DB output table and audit table")
                 t_end_e2e = time.time()
 
