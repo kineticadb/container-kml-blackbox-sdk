@@ -404,16 +404,6 @@
         }
       ],
       "output_record_type": [
-        {
-          "col_name": "class",
-          "col_type": "int",
-          "col_desc": "Temperature converted to fahrenheit"
-        },
-        {
-          "col_name": "probability",
-          "col_type": "double",
-          "col_desc": "Temperature converted to kelvins"
-        }
       ],
       "env_vars": []
     }
