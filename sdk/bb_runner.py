@@ -60,12 +60,10 @@ def grab_or_die(env_var_key):
 def get_tbl_handle(tbl_name, db, schema=None):
     #tbl_ref = tbl_name if not schema else f"{schema}.{tbl_name}"
     tbl_ref = tbl_name
-    return gpudb.GPUdbTable(name=tbl_ref,
-                            db=db,
-                            use_multihead_io=True,
-                            #  multihead_ingest_batch_size=10000,
-                            flush_multi_head_ingest_per_insertion=True)
-
+    if USE_MULTIHEAD_IO=="TRUE":
+        return gpudb.GPUdbTable(name=tbl_ref, db = db, use_multihead_io=True, flush_multi_head_ingest_per_insertion=True)
+    else:
+        return gpudb.GPUdbTable(name=tbl_ref, db = db)
 
 def get_conn_db(db_conn_str, db_user, db_pass):
     # Prepare DB Communications
@@ -202,6 +200,7 @@ if __name__ == '__main__':
     DB_PASS = grab_or_die("DB_PASS")
     SCHEMA_AUDIT = os.environ.get('SCHEMA_AUDIT', 'kml_audit')
     PERSIST_AUDIT = str(os.getenv('PERSIST_AUDIT', "TRUE")).upper()
+    USE_MULTIHEAD_IO = str(os.getenv('USE_MULTIHEAD_IO', "FALSE")).upper()
 
     logger.info(f"   KML_API_BASE: {KML_API_BASE}")
     logger.info(f"   DB_CONN_STR: {DB_CONN_STR}")
@@ -343,13 +342,10 @@ if __name__ == '__main__':
     h_tbl_out_results = None
     logger.info(f"DB Results Table {tbl_out_results}")
     if tbl_out_results and tbl_out_results != "NOT_APPLICABLE":
-        h_tbl_out_results = gpudb.GPUdbTable(
-            name=tbl_out_results,
-            db=cn_db,
-            use_multihead_io=True,
-            #  multihead_ingest_batch_size=10000,
-            flush_multi_head_ingest_per_insertion=True
-        )
+        if USE_MULTIHEAD_IO=="TRUE":
+            h_tbl_out_results = gpudb.GPUdbTable(name = tbl_out_results, db = cn_db, use_multihead_io=True, flush_multi_head_ingest_per_insertion=True)
+        else:
+            h_tbl_out_results = gpudb.GPUdbTable(name = tbl_out_results, db = cn_db)
         logger.info(f"Established connection to sink table")
         logger.info(f"All results will be persisted to both Audit {tbl_out_audit} "
                     f"and output DB Tables {tbl_out_results}")
