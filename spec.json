@@ -349,58 +349,48 @@
       "feature_memory_file": "featmem_zoo.json",
       "input_record_type": [
         {
-          "col_name": "animal_is_other",
-          "col_type": "int|int8",
-          "col_desc": "OHE: Is Animal a non-recognized encoded animal",
-          "col_default_val": "1"
+          "col_name": "animal",
+          "col_type": "string|char32"
         },
         {
-          "col_name": "animal_is_cat",
-          "col_type": "int|int8",
-          "col_desc": "OHE: Is Animal a Cat",
-          "col_default_val": "0"
+          "col_name": "happy",
+          "col_type": "double"
         },
         {
-          "col_name": "animal_is_dog",
-          "col_type": "int|int8",
-          "col_desc": "OHE: Is Animal a Dog",
-          "col_default_val": "0"
+          "col_name": "height",
+          "col_type": "double"
         },
         {
-          "col_name": "animal_is_grizzly_bear",
-          "col_type": "int|int8",
-          "col_desc": "OHE: Is Animal a Grizzly Bear",
-          "col_default_val": "0"
+          "col_name": "species",
+          "col_type": "string|char32"
         },
         {
-          "col_name": "happy_xform",
-          "col_type": "int|int16",
-          "col_desc": "Bucketed (by qunitile) Happiness Score"
+          "col_name": "age",
+          "col_type": "double"
         },
         {
-          "col_name": "height_xform",
-          "col_type": "double",
-          "col_desc": "Natural Log of Height"
+          "col_name": "yield",
+          "col_type": "double"
         },
         {
-          "col_name": "species_xform",
-          "col_type": "int|int16",
-          "col_desc": "Vocabulary Dict-Encoded Species Name"
+          "col_name": "legs",
+          "col_type": "double"
         },
         {
-          "col_name": "age_xform",
-          "col_type": "double",
-          "col_desc": "Normalized Age"
+          "col_name": "tag",
+          "col_type": "string|char32"
         },
         {
-          "col_name": "speed_xform",
-          "col_type": "double",
-          "col_desc": "Log of speed"
+          "col_name": "speed",
+          "col_type": "double"
         },
         {
-          "col_name": "tag_xform",
-          "col_type": "string|store_only",
-          "col_desc": "Identity _transform_"
+          "col_name": "ipaddress",
+          "col_type": "string|char32"
+        },
+        {
+          "col_name": "subset",
+          "col_type": "string|char8"
         }
       ],
       "output_record_type": [
