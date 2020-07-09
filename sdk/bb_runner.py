@@ -357,11 +357,6 @@ if __name__ == '__main__':
                              credentials=credentials,
                              event_sub_type="READY_TO_INFER")
 
-    phone_home_status(api_base=KML_API_BASE,
-                      dep_id=KML_DEPL_ID,
-                      credentials=credentials,
-                      target_status="RUNNING")
-
     # At this point, the input manager will set overall deployment status to RUNNING
 
     record_type = gpudb.RecordType.from_type_schema("", schema_decoder, {})
