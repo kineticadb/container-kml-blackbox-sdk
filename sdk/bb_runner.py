@@ -362,6 +362,8 @@ if __name__ == '__main__':
                       credentials=credentials,
                       target_status="RUNNING")
 
+    # At this point, the input manager will set overall deployment status to RUNNING
+
     record_type = gpudb.RecordType.from_type_schema("", schema_decoder, {})
 
     while True:
