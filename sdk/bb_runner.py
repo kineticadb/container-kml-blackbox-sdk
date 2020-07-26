@@ -61,9 +61,14 @@ def get_tbl_handle(tbl_name, db, schema=None):
     #tbl_ref = tbl_name if not schema else f"{schema}.{tbl_name}"
     tbl_ref = tbl_name
     if USE_MULTIHEAD_IO=="TRUE":
-        return gpudb.GPUdbTable(name=tbl_ref, db = db, use_multihead_io=True, flush_multi_head_ingest_per_insertion=True)
+        return gpudb.GPUdbTable(
+            name=tbl_ref,
+            db=db,
+            use_multihead_io=True,
+            flush_multi_head_ingest_per_insertion=True
+        )
     else:
-        return gpudb.GPUdbTable(name=tbl_ref, db = db)
+        return gpudb.GPUdbTable(name=tbl_ref, db=db)
 
 def get_conn_db(db_conn_str, db_user, db_pass):
     # Prepare DB Communications
@@ -110,25 +115,25 @@ def validate_kml_api(api_base, credentials):
     return False
 
 
-def phone_home_status(api_base, dep_id, credentials, target_status):
-    if not target_status:
-        raise ValueError("target_status cannot be null")
+#  def phone_home_status(api_base, dep_id, credentials, target_status):
+#      if not target_status:
+#          raise ValueError("target_status cannot be null")
 
-    if target_status not in ["RUNNING", "FAILED"]:
-        raise ValueError("target_status must be [RUNNING|FAILED]")
+#      if target_status not in ["RUNNING", "FAILED"]:
+#          raise ValueError("target_status must be [RUNNING|FAILED]")
 
-    try:
-        phone_home_loc = f"{api_base}/model/deployment/{dep_id}/setstatus"
-        logger.info(f"Phoning home status {target_status} to {phone_home_loc}")
-        r = requests.post(phone_home_loc,
-                          auth=credentials,
-                          json={"destination-state": target_status})
+#      try:
+#          phone_home_loc = f"{api_base}/model/deployment/{dep_id}/setstatus"
+#          logger.info(f"Phoning home status {target_status} to {phone_home_loc}")
+#          r = requests.post(phone_home_loc,
+#                            auth=credentials,
+#                            json={"destination-state": target_status})
 
-    except Exception as e:
-        logger.error(e)
-        error_type, error, tb = sys.exc_info()
-        logger.error(traceback.format_tb(tb))
-        traceback.print_exc(file=sys.stdout)
+#      except Exception as e:
+#          logger.error(e)
+#          error_type, error, tb = sys.exc_info()
+#          logger.error(traceback.format_tb(tb))
+#          traceback.print_exc(file=sys.stdout)
 
 
 def register_event_lifecycle(api_base, credentials, event_sub_type):
@@ -342,10 +347,15 @@ if __name__ == '__main__':
     h_tbl_out_results = None
     logger.info(f"DB Results Table {tbl_out_results}")
     if tbl_out_results and tbl_out_results != "NOT_APPLICABLE":
-        if USE_MULTIHEAD_IO=="TRUE":
-            h_tbl_out_results = gpudb.GPUdbTable(name = tbl_out_results, db = cn_db, use_multihead_io=True, flush_multi_head_ingest_per_insertion=True)
+        if USE_MULTIHEAD_IO == "TRUE":
+            h_tbl_out_results = gpudb.GPUdbTable(
+                name=tbl_out_results,
+                db=cn_db,
+                use_multihead_io=True,
+                flush_multi_head_ingest_per_insertion=True
+            )
         else:
-            h_tbl_out_results = gpudb.GPUdbTable(name = tbl_out_results, db = cn_db)
+            h_tbl_out_results = gpudb.GPUdbTable(name=tbl_out_results, db=cn_db)
         logger.info(f"Established connection to sink table")
         logger.info(f"All results will be persisted to both Audit {tbl_out_audit} "
                     f"and output DB Tables {tbl_out_results}")
@@ -353,13 +363,13 @@ if __name__ == '__main__':
         logger.info(f"All results will be persisted to Audit DB "
                     f"Table {tbl_out_audit} only")
 
+    record_type = gpudb.RecordType.from_type_schema("", schema_decoder, {})
+
     register_event_lifecycle(api_base=KML_API_BASE,
                              credentials=credentials,
                              event_sub_type="READY_TO_INFER")
 
     # At this point, the input manager will set overall deployment status to RUNNING
-
-    record_type = gpudb.RecordType.from_type_schema("", schema_decoder, {})
 
     while True:
 
