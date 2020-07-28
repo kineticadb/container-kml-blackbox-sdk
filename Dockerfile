@@ -20,6 +20,9 @@ WORKDIR "/opt/gpudb/kml/bbx"
 
 # Install Required Libraries and Dependencies
 ADD requirements.txt  ./
+RUN pip install --upgrade pip
+ADD gpudb-api-python/gpudb-*-cp36-cp36m-manylinux1_x86_64.whl ./
+RUN pip install ./gpudb-*.whl
 RUN pip install -r requirements.txt --no-cache-dir
 
 # Add introspection assets
