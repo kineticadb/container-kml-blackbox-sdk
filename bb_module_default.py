@@ -42,6 +42,8 @@ def blackbox_function_math_bulkinfer(inMap):
     in_df['product'] = in_df["figure1_numeric"] * in_df["figure2_numeric"]
     in_df['max'] = in_df[["figure1_numeric", "figure2_numeric"]].max(axis=1)
     in_df['suminwords'] = in_df["mylabel"] + " " + in_df['sum'].astype(str)
+    del in_df['figure1_numeric']
+    del in_df['figure2_numeric']
     return in_df.to_dict('records')
 
 def blackbox_function_math_multiout(inMap):

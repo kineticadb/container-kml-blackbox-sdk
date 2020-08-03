@@ -14,30 +14,6 @@
   "screenshot_urls": [],
   "functions": [
     {
-      "name": "Trivial Sample BlackBox function demonstrating function with no required params",
-      "desc": "Trivial Sample BlackBox function demonstrating function with no required params. Note that non-required parameters can still be passed through on the inbound dictionary.",
-      "bb_module": "bb_module_default",
-      "bb_function": "blackbox_function_default",
-      "input_record_type": [],
-      "output_record_type": [],
-      "env_vars": [],
-      "compute-support": [
-        "CPU"
-      ]
-    },
-    {
-      "name": "Identity function",
-      "desc": "Identity function - what goes in must come out",
-      "bb_module": "bb_module_default",
-      "bb_function": "blackbox_function_identity",
-      "input_record_type": [],
-      "output_record_type": [],
-      "env_vars": [],
-      "compute-support": [
-        "CPU"
-      ]
-    },
-    {
       "name": "Trivial Sample BlackBox function demonstrating function with required params of different types",
       "desc": "Trivial Sample BlackBox function demonstrating function with required params of different types.",
       "bb_module": "bb_module_default",
@@ -361,71 +337,51 @@
       "feature_memory_file": "featmem_zoo.json",
       "input_record_type": [
         {
-          "col_name": "animal_is_other",
-          "col_type": "int|int8",
-          "col_desc": "OHE: Is Animal a non-recognized encoded animal",
-          "col_default_val": "1"
+          "col_name": "animal",
+          "col_type": "string|char32"
         },
         {
-          "col_name": "animal_is_cat",
-          "col_type": "int|int8",
-          "col_desc": "OHE: Is Animal a Cat",
-          "col_default_val": "0"
+          "col_name": "happy",
+          "col_type": "double"
         },
         {
-          "col_name": "animal_is_dog",
-          "col_type": "int|int8",
-          "col_desc": "OHE: Is Animal a Dog",
-          "col_default_val": "0"
+          "col_name": "height",
+          "col_type": "double"
         },
         {
-          "col_name": "animal_is_grizzly_bear",
-          "col_type": "int|int8",
-          "col_desc": "OHE: Is Animal a Grizzly Bear",
-          "col_default_val": "0"
+          "col_name": "species",
+          "col_type": "string|char32"
         },
         {
-          "col_name": "happy_xform",
-          "col_type": "int|int16",
-          "col_desc": "Bucketed (by qunitile) Happiness Score"
+          "col_name": "age",
+          "col_type": "double"
         },
         {
-          "col_name": "height_xform",
-          "col_type": "double",
-          "col_desc": "Natural Log of Height"
+          "col_name": "yield",
+          "col_type": "double"
         },
         {
-          "col_name": "species_xform",
-          "col_type": "int|int16",
-          "col_desc": "Vocabulary Dict-Encoded Species Name"
+          "col_name": "legs",
+          "col_type": "double"
         },
         {
-          "col_name": "age_xform",
-          "col_type": "double",
-          "col_desc": "Normalized Age"
+          "col_name": "tag",
+          "col_type": "string|char32"
         },
         {
-          "col_name": "speed_xform",
-          "col_type": "double",
-          "col_desc": "Log of speed"
+          "col_name": "speed",
+          "col_type": "double"
         },
         {
-          "col_name": "tag_xform",
-          "col_type": "string|store_only",
-          "col_desc": "Identity _transform_"
+          "col_name": "ipaddress",
+          "col_type": "string|char32"
+        },
+        {
+          "col_name": "subset",
+          "col_type": "string|char8"
         }
       ],
       "output_record_type": [
-        {
-          "col_name": "class",
-          "col_type": "int",
-          "col_desc": "Temperature converted to fahrenheit"
-        },
-        {
-          "col_name": "probability",
-          "col_type": "double",
-          "col_desc": "Temperature converted to kelvins"
-        }
       ],
       "env_vars": []
     }
