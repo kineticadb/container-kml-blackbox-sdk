@@ -126,6 +126,7 @@ run_cmd "cp ${ROOT_DIR}/*.json '${CONTAINER_BUILD_DIR}'"
 run_cmd "cp ${ROOT_DIR}/*.sh '${CONTAINER_BUILD_DIR}'"
 run_cmd "cp -R ${ROOT_DIR}/sdk '${CONTAINER_BUILD_DIR}'"
 run_cmd "cp -R '${ROOT_DIR}/requirements.txt' '${CONTAINER_BUILD_DIR}'"
+run_cmd "cp '${ROOT_DIR}/END_USER_LICENSE_AGREEMENT.txt' '${CONTAINER_BUILD_DIR}'"
 
 run_cmd "cp -R '${GPUDB_PYTHON_API_DIR}/_build/wheel' '${CONTAINER_BUILD_DIR}/gpudb-api-python'"
 
