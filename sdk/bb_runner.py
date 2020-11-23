@@ -6,31 +6,19 @@ import json
 import datetime
 import logging
 import copy
-import logging
-import pprint
+#  import pprint
 
 import zmq
 import gpudb
 import requests
 from requests.exceptions import ConnectionError
 
-###############################################################################
-# For use by SDK Clients
-# Use this decorator if you wish to declare a black box function bulk capable
-
-def bulk_infer_capable(func):
-    def inner(inMap):
-        return func(inMap)
-    setattr(inner, 'BULK_INFER_CAPABLE', True)
-    return inner
-###############################################################################
-
-logger = logging.getLogger("kml-bbx-sdk")
+logger = logging.getLogger('kml-bbx-sdk')
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handlerC = logging.StreamHandler()
 handlerC.setFormatter(formatter)
-if (logger.hasHandlers()):
+if logger.hasHandlers():
     logger.handlers.clear()
 logger.addHandler(handlerC)
 
@@ -42,25 +30,45 @@ dep_name = '-'.join([pt[0], pt[1], pt[2]])
 
 ZMQ_HEARTBEAT = 900
 
-DEFAULT_EVENT_SIG = {"deployment_id": env_dep_id,
-                     "deployment_name": dep_name,
-                     "reporter_type": "WORKER",
-                     "k8s_pod_name": env_pod_name}
+DEFAULT_EVENT_SIG = {
+    'deployment_id': env_dep_id,
+    'deployment_name': dep_name,
+    'reporter_type': 'WORKER',
+    'k8s_pod_name': env_pod_name
+}
 
 
-# Grab environment variables or die trying
+###############################################################################
+# For use by SDK Clients
+# Use this decorator if you wish to declare a black box function bulk capable
+
+def bulk_infer_capable(func):
+
+    def inner(inMap):
+        return func(inMap)
+
+    setattr(inner, 'BULK_INFER_CAPABLE', True)
+
+    return inner
+###############################################################################
+
+
 def grab_or_die(env_var_key):
+    """Grab environment variables or die trying."""
+
     if env_var_key not in os.environ:
         logger.error(f"Could not find {env_var_key} environment "
                      f"variable. Cannot proceed.")
         sys.exit(1)
+
     return os.environ[env_var_key]
 
 
 def get_tbl_handle(tbl_name, db, schema=None):
-    #tbl_ref = tbl_name if not schema else f"{schema}.{tbl_name}"
+    """Create a DB table handle."""
+
     tbl_ref = tbl_name
-    if USE_MULTIHEAD_IO=="TRUE":
+    if USE_MULTIHEAD_IO == 'TRUE':
         return gpudb.GPUdbTable(
             name=tbl_ref,
             db=db,
@@ -70,19 +78,28 @@ def get_tbl_handle(tbl_name, db, schema=None):
     else:
         return gpudb.GPUdbTable(name=tbl_ref, db=db)
 
+
 def get_conn_db(db_conn_str, db_user, db_pass):
-    # Prepare DB Communications
-    logger.info(f"Attempting to connect to DB at {db_conn_str} to push to {tbl_out_audit}")
+    """Prepare DB Communications."""
+
+    logger.info(f"Attempting to connect to database at {db_conn_str}. "
+                f"Pushing to table {tbl_out_audit}")
+
     if db_user == 'no_cred' or db_pass == 'no_cred':
-        cn_db = gpudb.GPUdb(encoding='BINARY',
-                            host=db_conn_str,
-                            primary_host=db_conn_str)
+        cn_db = gpudb.GPUdb(
+            encoding='BINARY',
+            host=db_conn_str,
+            primary_host=db_conn_str
+        )
     else:
-        cn_db = gpudb.GPUdb(encoding='BINARY',
-                            host=db_conn_str,
-                            primary_host=db_conn_str,
-                            username=db_user,
-                            password=db_pass)
+        cn_db = gpudb.GPUdb(
+            encoding='BINARY',
+            host=db_conn_str,
+            primary_host=db_conn_str,
+            username=db_user,
+            password=db_pass
+        )
+
     return cn_db
 
 
@@ -99,56 +116,39 @@ def validate_kml_api(api_base, credentials):
     for waitsecs in wait_times:
 
         try:
-            r = requests.get(f"{api_base}/ping",
-                             auth=credentials)
+            r = requests.get(
+                f"{api_base}/ping",
+                auth=credentials
+            )
             if r.status_code == 200:
                 api_response = r.json()
                 if 'success' in api_response and r.json()['success']:
                     logger.info(f"Successfully connected to API base {api_base}")
                     return True
-        except ConnectionError as e:    # This is the correct syntax
+        except ConnectionError as e:
             logger.warn(f"Could not connect to KML API {api_base}, will retry shortly...")
             time.sleep(waitsecs)
-            # eating this error
 
     logger.error(f"Could not connect to KML API {api_base}, exhausted tries. Giving up.")
+
     return False
-
-
-#  def phone_home_status(api_base, dep_id, credentials, target_status):
-#      if not target_status:
-#          raise ValueError("target_status cannot be null")
-
-#      if target_status not in ["RUNNING", "FAILED"]:
-#          raise ValueError("target_status must be [RUNNING|FAILED]")
-
-#      try:
-#          phone_home_loc = f"{api_base}/model/deployment/{dep_id}/setstatus"
-#          logger.info(f"Phoning home status {target_status} to {phone_home_loc}")
-#          r = requests.post(phone_home_loc,
-#                            auth=credentials,
-#                            json={"destination-state": target_status})
-
-#      except Exception as e:
-#          logger.error(e)
-#          error_type, error, tb = sys.exc_info()
-#          logger.error(traceback.format_tb(tb))
-#          traceback.print_exc(file=sys.stdout)
 
 
 def register_event_lifecycle(api_base, credentials, event_sub_type):
 
     payload = {
-        "event_type": "LIFECYCLE",
-        "event_sub_type": event_sub_type,
+        'event_type': 'LIFECYCLE',
+        'event_sub_type': event_sub_type,
     }
 
     payload.update(DEFAULT_EVENT_SIG)
 
     try:
-        r = requests.post(f"{api_base}/admin/events/register",
-                          auth=credentials,
-                          json=payload)
+        r = requests.post(
+            f"{api_base}/admin/events/register",
+            auth=credentials,
+            json=payload
+        )
 
     except Exception as e:
         logger.error(e)
@@ -164,23 +164,25 @@ def register_event_metrics(api_base, credentials, seq_id=None, recs_received=Non
                            throughput_inf=None, throughput_e2e=None):
 
     payload = {
-        "event_type": "METRICS",
-        "seq_id": seq_id,
-        "recs_received": recs_received,
-        "recs_relayed": None,
-        "recs_inf_success": recs_inf_success,
-        "recs_inf_failure": recs_inf_failure,
-        "recs_inf_persisted": recs_inf_persisted,
-        "throughput_inf": throughput_inf,
-        "throughput_e2e": throughput_e2e
+        'event_type': 'METRICS',
+        'seq_id': seq_id,
+        'recs_received': recs_received,
+        'recs_relayed': None,
+        'recs_inf_success': recs_inf_success,
+        'recs_inf_failure': recs_inf_failure,
+        'recs_inf_persisted': recs_inf_persisted,
+        'throughput_inf': throughput_inf,
+        'throughput_e2e': throughput_e2e
     }
 
     payload.update(DEFAULT_EVENT_SIG)
 
     try:
-        r = requests.post(f"{api_base}/admin/events/register",
-                          auth=credentials,
-                          json=payload)
+        r = requests.post(
+            f"{api_base}/admin/events/register",
+            auth=credentials,
+            json=payload
+        )
 
     except Exception as e:
         logger.error(e)
@@ -195,48 +197,60 @@ if __name__ == '__main__':
     logger.info("Initializing Kinetica BlackBox SDK")
 
     # Things coming in from the environment via env-variables
-    KML_API_BASE = grab_or_die("KML_API_BASE")
-    KML_DEPL_ID = grab_or_die("KML_DEPL_ID")
-    ZMQ_DEALER_HOST = grab_or_die("ZMQ_DEALER_HOST")
-    ZMQ_DEALER_PORT = grab_or_die("ZMQ_DEALER_PORT")
+    KML_API_BASE = grab_or_die('KML_API_BASE')
+    KML_DEPL_ID = grab_or_die('KML_DEPL_ID')
+    ZMQ_DEALER_HOST = grab_or_die('ZMQ_DEALER_HOST')
+    ZMQ_DEALER_PORT = grab_or_die('ZMQ_DEALER_PORT')
     ZMQ_CONN_STR = f"tcp://{ZMQ_DEALER_HOST}:{ZMQ_DEALER_PORT}"
-    DB_CONN_STR = grab_or_die("DB_CONN_STR")
-    DB_USER = grab_or_die("DB_USER")
-    DB_PASS = grab_or_die("DB_PASS")
+    DB_CONN_STR = grab_or_die('DB_CONN_STR')
+    DB_USER = grab_or_die('DB_USER')
+    DB_PASS = grab_or_die('DB_PASS')
     SCHEMA_AUDIT = os.environ.get('SCHEMA_AUDIT', 'kml_audit')
-    PERSIST_AUDIT = str(os.getenv('PERSIST_AUDIT', "TRUE")).upper()
-    USE_MULTIHEAD_IO = str(os.getenv('USE_MULTIHEAD_IO', "FALSE")).upper()
+    PERSIST_AUDIT = str(os.getenv('PERSIST_AUDIT', 'TRUE')).upper()
+    USE_MULTIHEAD_IO = str(os.getenv('USE_MULTIHEAD_IO', 'FALSE')).upper()
 
-    logger.info(f"   KML_API_BASE: {KML_API_BASE}")
-    logger.info(f"   DB_CONN_STR: {DB_CONN_STR}")
-    logger.info(f"   DB_USER: {DB_USER}")
-    logger.info(f"   DB_PASS: *******")
-    logger.info(f"   ZMQ_CONN_STR: {ZMQ_CONN_STR}")
+    logger.info(f"KML_API_BASE: {KML_API_BASE}")
+    logger.info(f"DB_CONN_STR: {DB_CONN_STR}")
+    logger.info(f"DB_USER: {DB_USER}")
+    logger.info(f"DB_PASS: *******")
+    logger.info(f"ZMQ_CONN_STR: {ZMQ_CONN_STR}")
 
     # Container auth for api
     if DB_USER and DB_PASS:
         if DB_USER.lower() != 'no_cred':
             credentials = (DB_USER, DB_PASS)
-            logger.info("   DB Connection will be authenticated")
+            logger.info('DB Connection will be authenticated')
         else:
             credentials = None
-            logger.info("   DB Connection will be w/o authentication (debug mode)")
+            logger.info('DB Connection will be w/o authentication (debug mode)')
     else:
         credentials = None
-        logger.info("   DB Connection will be w/o authentication (debug mode)")
+        logger.info('DB Connection will be w/o authentication (debug mode)')
 
-    register_event_lifecycle(api_base=KML_API_BASE,
-                             credentials=credentials,
-                             event_sub_type="INITIALIZING")
+    register_event_lifecycle(
+        api_base=KML_API_BASE,
+        credentials=credentials,
+        event_sub_type='INITIALIZING'
+    )
 
     # Things we default, but can capture in as environment variables
-    be_quiet = True if (os.environ.get('be_quiet') and os.environ.get('be_quiet').upper() == "TRUE") else False
+    be_quiet = (
+        True
+        if (
+            os.environ.get('be_quiet')
+            and os.environ.get('be_quiet').upper() == 'TRUE'
+        )
+        else False
+    )
     if be_quiet:
         logger.setLevel(logging.ERROR)
 
-    register_event_lifecycle(api_base=KML_API_BASE,
-                             credentials=credentials,
-                             event_sub_type="DEP_DETAILS_OBTAINING")
+    register_event_lifecycle(
+        api_base=KML_API_BASE,
+        credentials=credentials,
+        event_sub_type='DEP_DETAILS_OBTAINING'
+    )
+
     dep_details_uri = f"{KML_API_BASE}/model/deployment/{KML_DEPL_ID}/view"
     logger.info(f"Deployment details from {dep_details_uri}, attempting connection...")
     if not validate_kml_api(KML_API_BASE, credentials):
@@ -255,21 +269,44 @@ if __name__ == '__main__':
         logger.error(f"Could not find live deployment with id {KML_DEPL_ID}")
         sys.exit(1)
 
-    register_event_lifecycle(api_base=KML_API_BASE,
-                             credentials=credentials,
-                             event_sub_type="DEP_DETAILS_RECEIVED")
+    register_event_lifecycle(
+        api_base=KML_API_BASE,
+        credentials=credentials,
+        event_sub_type='DEP_DETAILS_RECEIVED'
+    )
 
-    bb_module = dep_details["response"]["item"]["base_model_inst"]["model_inst_config"]["blackbox_module"]
-    bb_method = dep_details["response"]["item"]["base_model_inst"]["model_inst_config"]["blackbox_function"]
-    schema_inbound = dep_details["response"]["item"]["model_dep_config"]["inp-tablemonitor"]["type_schema"]
-    tbl_out_results = dep_details["response"]["item"]["model_dep_config"]["sink_table"]
-    tbl_out_audit = dep_details["response"]["item"]["model_dep_config"]["out-tablemonitor"]["table_name"]
-    output_record_list = dep_details["response"]["item"]["base_model_inst"]["model_inst_config"]["output_record_type"]
-    outfields = [arec["col_name"] for arec in output_record_list]
+    bb_module = (
+        dep_details['response']['item']['base_model_inst']
+        ['model_inst_config']['blackbox_module']
+    )
+    bb_method = (
+        dep_details['response']['item']['base_model_inst']
+        ['model_inst_config']['blackbox_function']
+    )
+    schema_inbound = (
+        dep_details['response']['item']['model_dep_config']
+        ['inp-tablemonitor']['type_schema']
+    )
+    tbl_out_results = (
+        dep_details['response']['item']['model_dep_config']
+        ['sink_table']
+    )
+    tbl_out_audit = (
+        dep_details['response']['item']['model_dep_config']
+        ['out-tablemonitor']['table_name']
+    )
+    output_record_list = (
+        dep_details['response']['item']['base_model_inst']
+        ['model_inst_config']['output_record_type']
+    )
 
-    register_event_lifecycle(api_base=KML_API_BASE,
-                             credentials=credentials,
-                             event_sub_type="DEP_DETAILS_PROCESSED")
+    outfields = [arec['col_name'] for arec in output_record_list]
+
+    register_event_lifecycle(
+        api_base=KML_API_BASE,
+        credentials=credentials,
+        event_sub_type='DEP_DETAILS_PROCESSED'
+    )
 
     logger.info(f"bb_module: {bb_module}")
     logger.info(f"bb_method: {bb_method}")
@@ -280,7 +317,7 @@ if __name__ == '__main__':
     for outf in outfields:
         logger.info(f"   Output field: {outf}")
 
-    protected_fields = ["guid", "receive_dt", "process_start_dt", "process_end_dt"]
+    protected_fields = ['guid', 'receive_dt', 'process_start_dt', 'process_end_dt']
     # TODO: also protect input fields
     # protected_fields = infields + ["guid", "receive_dt", "process_start_dt", "process_end_dt"]
 
@@ -295,17 +332,17 @@ if __name__ == '__main__':
             BLACKBOX_MULTIROW_INFER = True
 
     if BLACKBOX_MULTIROW_INFER:
-        logger.info("   Employing Bulk Infer")
+        logger.info('   Employing Bulk Infer')
     else:
-        logger.info("   Employing Single-Row (Traditional Mode) Infer")
+        logger.info('   Employing Single-Row (Traditional Mode) Infer')
 
     block_request_count = 0
     response_count = 0
     default_results_subdict = {
-        "success": 0,
-        "errorlog": None,
-        "errorstack": None,
-        "process_end_dt": None
+        'success': 0,
+        'errorlog': None,
+        'errorstack': None,
+        'process_end_dt': None
     }
     for outf in outfields:
         default_results_subdict[outf] = None
@@ -313,9 +350,11 @@ if __name__ == '__main__':
     # TODO Put these connection activities into a higher-level giant try-catch
     #    to re-connect upon failures
     # In case of a ZMQ connection failure
-    register_event_lifecycle(api_base=KML_API_BASE,
-                             credentials=credentials,
-                             event_sub_type="ZMQ_CONNECTING")
+    register_event_lifecycle(
+        api_base=KML_API_BASE,
+        credentials=credentials,
+        event_sub_type='ZMQ_CONNECTING'
+    )
 
     logger.info('ZMQ socket: Configuring')
     context = zmq.Context()
@@ -328,26 +367,32 @@ if __name__ == '__main__':
     socket.connect(ZMQ_CONN_STR)
     logger.info('ZMQ socket: Successfully connected')
 
-    register_event_lifecycle(api_base=KML_API_BASE,
-                             credentials=credentials,
-                             event_sub_type="ZMQ_CONNECTED")
+    register_event_lifecycle(
+        api_base=KML_API_BASE,
+        credentials=credentials,
+        event_sub_type='ZMQ_CONNECTED'
+    )
 
     # Prepare DB Connection
-    register_event_lifecycle(api_base=KML_API_BASE,
-                             credentials=credentials,
-                             event_sub_type="DB_CONNECTING")
+    register_event_lifecycle(
+        api_base=KML_API_BASE,
+        credentials=credentials,
+        event_sub_type='DB_CONNECTING'
+    )
     cn_db = get_conn_db(DB_CONN_STR, DB_USER, DB_PASS)
-    register_event_lifecycle(api_base=KML_API_BASE,
-                             credentials=credentials,
-                             event_sub_type="DB_CONNECTED")
+    register_event_lifecycle(
+        api_base=KML_API_BASE,
+        credentials=credentials,
+        event_sub_type='DB_CONNECTED'
+    )
 
     # [Re]Establish table handles
 
     h_tbl_out_audit = get_tbl_handle(tbl_out_audit, db=cn_db, schema=SCHEMA_AUDIT)
     h_tbl_out_results = None
     logger.info(f"DB Results Table {tbl_out_results}")
-    if tbl_out_results and tbl_out_results != "NOT_APPLICABLE":
-        if USE_MULTIHEAD_IO == "TRUE":
+    if tbl_out_results and tbl_out_results != 'NOT_APPLICABLE':
+        if USE_MULTIHEAD_IO == 'TRUE':
             h_tbl_out_results = gpudb.GPUdbTable(
                 name=tbl_out_results,
                 db=cn_db,
@@ -363,13 +408,15 @@ if __name__ == '__main__':
         logger.info(f"All results will be persisted to Audit DB "
                     f"Table {tbl_out_audit} only")
 
-    record_type = gpudb.RecordType.from_type_schema("", schema_decoder, {})
+    record_type = gpudb.RecordType.from_type_schema('', schema_decoder, {})
 
-    register_event_lifecycle(api_base=KML_API_BASE,
-                             credentials=credentials,
-                             event_sub_type="READY_TO_INFER")
+    register_event_lifecycle(
+        api_base=KML_API_BASE,
+        credentials=credentials,
+        event_sub_type='READY_TO_INFER'
+    )
 
-    # At this point, the input manager will set overall deployment status to RUNNING
+    # NOTE: At this point, the input manager will set overall deployment status to RUNNING
 
     while True:
 
@@ -392,7 +439,7 @@ if __name__ == '__main__':
             throughput_e2e = None
 
             try:
-                logger.info("Awaiting inbound requests")
+                logger.info('Awaiting inbound requests')
 
                 mpr = socket.recv_multipart()
                 block_request_count += 1
@@ -416,7 +463,7 @@ if __name__ == '__main__':
                 for mindex, results_package in enumerate(results_package_list):
                     response_count += 1
                     results_package_list[mindex].update(default_results_subdict)
-                    results_package_list[mindex]["process_start_dt"] = process_start_dt
+                    results_package_list[mindex]['process_start_dt'] = process_start_dt
 
                 t_start_inf = time.time()
                 outMaps = method_to_call(copy.deepcopy(results_package_list))
@@ -434,10 +481,10 @@ if __name__ == '__main__':
                             outMaps[mindex].pop(pf)
 
                     results_package_list[mindex].update(outMaps[mindex])
-                    results_package_list[mindex]["process_end_dt"] = process_end_dt
-                    results_package_list[mindex]["success"] = 1
+                    results_package_list[mindex]['process_end_dt'] = process_end_dt
+                    results_package_list[mindex]['success'] = 1
 
-                if PERSIST_AUDIT != "FALSE":
+                if PERSIST_AUDIT != 'FALSE':
                     _ = h_tbl_out_audit.insert_records(results_package_list)
                 if h_tbl_out_results is None:
                     logger.info(f"Response sent back to DB audit table")
@@ -460,7 +507,7 @@ if __name__ == '__main__':
                             f"{throughput_inf}ms on e2e: {throughput_e2e}ms")
 
             except Exception as e:
-                # TODO: As discussed at code review on 3 Jan 2019, push stack trace and input body to store_only field in output table
+                # TODO: Push stack trace and input body to store_only field in output table
                 logger.error(e)
                 error_type, error, tb = sys.exc_info()
                 logger.error(traceback.format_tb(tb))
@@ -495,7 +542,7 @@ if __name__ == '__main__':
             throughput_e2e = None
 
             try:
-                logger.info("Awaiting inbound requests")
+                logger.info('Awaiting inbound requests')
 
                 mpr = socket.recv_multipart()
                 block_request_count += 1
@@ -518,10 +565,10 @@ if __name__ == '__main__':
                 results_persistable = []
 
                 process_start_dt = datetime.datetime.now().isoformat(' ')[:-3]
-                #for mindex, results_package in enumerate(results_package_list):
-                #    response_count += 1
-                #    results_package_list[mindex].update(default_results_subdict)
-                #    results_package_list[mindex]["process_start_dt"] = process_start_dt
+                # for mindex, results_package in enumerate(results_package_list):
+                #     response_count += 1
+                #     results_package_list[mindex].update(default_results_subdict)
+                #     results_package_list[mindex]['process_start_dt'] = process_start_dt
 
                 recs_inf_failure = 0
                 t_start_inf = time.time()
@@ -533,12 +580,13 @@ if __name__ == '__main__':
                         if not isinstance(outMap, list):
                             # TODO: Consider force exceptioning on this case and
                             # forcing users to fix this
-                            #  logger.warn ("Received lone dictionary function output, "
-                            #               "force listifying")
+                            #  logger.warn ('Received lone dictionary function output, '
+                            #               'force listifying')
                             outMap = [outMap,]
 
-                        #logger.info("Outputs Received")
-                        #logger.info(pprint.pformat(outMap, indent=4))
+                        # logger.info('Outputs Received')
+                        # logger.info(pprint.pformat(outMap, indent=4))
+
                         # Loop, in case of multi-out scenarios
                         for outMapItem in outMap:
                             # Protected fields cannot be overwritten by blackbox function
@@ -548,10 +596,12 @@ if __name__ == '__main__':
 
                             persistable = copy.deepcopy(results_package_list[mindex])
                             persistable.update(default_results_subdict)
-                            persistable["process_start_dt"] = process_start_dt
-                            persistable["process_end_dt"] = datetime.datetime.now().isoformat(' ')[:-3]
+                            persistable['process_start_dt'] = process_start_dt
+                            persistable['process_end_dt'] = (
+                                datetime.datetime.now().isoformat(' ')[:-3]
+                            )
                             persistable.update(outMapItem)
-                            persistable["success"] = 1
+                            persistable['success'] = 1
                             response_count += 1
                             results_persistable.append(persistable)
                     except Exception as e:
@@ -563,26 +613,26 @@ if __name__ == '__main__':
 
                         persistable = copy.deepcopy(results_package_list[mindex])
                         persistable.update(default_results_subdict)
-                        persistable["process_start_dt"] = process_start_dt
-                        persistable["process_end_dt"] = datetime.datetime.now().isoformat(' ')[:-3]
-                        persistable["errorstack"] = "\n".join(traceback.format_tb(tb))
+                        persistable['process_start_dt'] = process_start_dt
+                        persistable['process_end_dt'] = datetime.datetime.now().isoformat(' ')[:-3]
+                        persistable['errorstack'] = "\n".join(traceback.format_tb(tb))
                         if e:
-                            persistable["errorlog"] = str(e)
+                            persistable['errorlog'] = str(e)
                         response_count += 1
                         results_persistable.append(persistable)
-                    
-                #logger.info("Final persistable")
-                #logger.info(pprint.pformat(results_persistable, indent=4))
+
+                # logger.info('Final persistable')
+                # logger.info(pprint.pformat(results_persistable, indent=4))
 
                 t_end_inf = time.time()
 
-                if PERSIST_AUDIT != "FALSE":
+                if PERSIST_AUDIT != 'FALSE':
                     _ = h_tbl_out_audit.insert_records(results_persistable)
                 if h_tbl_out_results is None:
-                    logger.info(f"Response sent back to DB audit table")
+                    logger.info('Response sent back to DB audit table')
                 else:
                     _ = h_tbl_out_results.insert_records(results_persistable)
-                    logger.info(f"Response sent back to DB output table and audit table")
+                    logger.info('Response sent back to DB output table and audit table')
                 t_end_e2e = time.time()
 
                 # TODO: actually grab this from insert_records return values, dont assume
@@ -618,12 +668,3 @@ if __name__ == '__main__':
                 throughput_inf=throughput_inf,
                 throughput_e2e=throughput_e2e
             )
-
-
-#  if __name__ == '__main__':
-#      main()
-
-#      # TODO: Really, we should *never* exit. So if we exit, that is a failure already
-#      # The only "exit" would be if we are terminated externally via REST API
-#      logger.warn("Exiting container. Hopefully this was user-initiated from REST API.")
-#      sys.exit(1)
