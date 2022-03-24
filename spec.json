@@ -2,7 +2,7 @@
   "name": "Kinetica BlackBox SDK: Trivial Example BlackBox functions",
   "desc": "Kinetica BlackBox SDK: Trivial BlackBox functions demonstrating possible options and permutations",
   "icon_uri": "https://kinetica-aaw-marketplace.s3.amazonaws.com/logos/appstore_logo_model.png",
-  "src_uri": "kinetica/kinetica-blackbox-sdk:r7.2.0",
+  "src_uri": "kinetica/kinetica-blackbox-sdk:r7.1.4",
   "type": "BLACKBOX",
   "industry": [],
   "keywords": [],

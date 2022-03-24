@@ -14,19 +14,19 @@ LABEL maintainer="support@kinetica.com"
 LABEL Description="Kinetica Machine Learning BlackBox SDK and starter examples."
 LABEL Author="Saif Ahmed; Julian Jenkins"
 
-RUN mkdir -p /opt/gpudb/kml/bbx
-RUN mkdir -p /opt/gpudb/kml/bbx/specs
-WORKDIR "/opt/gpudb/kml/bbx"
+RUN mkdir -p /opt/gpudb/kml
+WORKDIR "/opt/gpudb/kml"
+
+ADD spec.json  ./
 
 # Install Required Libraries and Dependencies
 ADD requirements.txt  ./
 RUN pip install --upgrade pip
 # ADD gpudb-api-python/gpudb-*-cp36-cp36m-manylinux1_x86_64.whl ./
 # RUN pip install ./gpudb-*.whl
-RUN pip install -r requirements.txt --no-cache-dir
+RUN python -m pip install --upgrade pip
 
-# Add introspection assets
-ADD *.json ./specs/
+RUN pip install -r requirements.txt --no-cache-dir
 
 # Add Kinetica BlackBox SDK
 ADD bb_runner.sh ./
@@ -40,4 +40,4 @@ ADD bb_module_stress.py ./
 ADD END_USER_LICENSE_AGREEMENT.txt ./
 
 RUN ["chmod", "+x",  "bb_runner.sh"]
-ENTRYPOINT ["/opt/gpudb/kml/bbx/bb_runner.sh"]
+ENTRYPOINT ["/opt/gpudb/kml/bb_runner.sh"]

@@ -6,12 +6,15 @@ import json
 import datetime
 import logging
 import copy
+import ssl
 #  import pprint
 
 import zmq
 import gpudb
 import requests
 from requests.exceptions import ConnectionError
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 logger = logging.getLogger('kml-bbx-sdk')
 logger.setLevel(logging.DEBUG)
