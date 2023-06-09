@@ -240,3 +240,5 @@ The AAW UI offers a simpler WYSIWYG-style approach to importing a blackbox model
 The final UI inputs should look similar to this:
 
 ![aaw ui new blackbox model filled](http://www.kinetica.com/docs/7.0/aaw/img/aaw_ui_new_bb_model_filled.png)
+
+(c) Kinetica, Inc.
