@@ -1,4 +1,4 @@
 gpudb==7.1.9.3
 pyzmq==25.0.2
-requests==2.30.0
+requests==2.31.0
 pandas==2.0.1
