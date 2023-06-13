@@ -1,244 +1,233 @@
 # Kinetica Blackbox Software Development Kit (SDK)
 
-This project contains the **7.0.x.y** version of the **Kinetica Blackbox Software Development Kit** for integration of *Kinetica* with custom blackbox models.
+---
 
-This guide exists on-line at: [Kinetica Blackbox Software Development Kit (SDK) Guide](http://www.kinetica.com/docs/7.0/aaw/blackbox_sdk.html)
+## Overview
 
-More information can be found at: [Kinetica Documentation](http://www.kinetica.com/docs/7.0/index.html)
+The Blackbox SDK provides a container-based interface to user provided models for use
+with the Kinetica database. Model code may be a computational analyitc of any type
+including, but not limited to, machine learning algorithms. Container management and
+both batch and continuous deployment invocations are accessible with SQL commands
+in Kinetica Workbench.
 
------
-
-# Kinetica Blackbox SDK Guide
-
-The Kinetica Blackbox SDK assists users in creating blackbox models to wrap existing code/functionality and make it deployable within the Kinetica system. The Active Analytics Workbench (AAW) currently can only import blackbox models that have been containerized and implement the BlackBox SDK. Users provide the Python module scripts, modify some SDK files, and the SDK will build a Docker Container from the files and publish it to a given Docker Registry (private or public).
-
-For help with containerizing models, the Kinetica Blackbox Wizard is available via the [Model + Analytics portion](https://www.kinetica.com/docs/aaw/models_analytics.html#bb-model-import) of the AAW User Interface (UI).
+> NOTE: While the KML api remains supported, an earlier stand-alone UI known as AAW 
+has been deprecated in favor of SQL bindings (ml-sql) and integration into the new 
+Workbench user interface for Kinetica.
 
 ## Prerequisites
 
 * [Docker](https://www.docker.com/get-started)
-* Docker [Hub](https://hub.docker.com/) / Docker Registry
+* Container registry such as Docker Hub, AWS ECR, DOCR etc
+* Kinetica 7.1 AWS or Azure marketplace (PaaS) deployment or a On-Prem KAgent installation
+of Kinetica 7.1 with a user connected Kubernetes cluster
+ 
+## Container structure
 
-## Download and Configuration
+Models are represented as functions within a module file. Though not required, you can
+have multiple function within multiple module files all in a single container as a method
+of consolidating all model assets.
 
-Download the Blackbox SDK from GitHub and select a version that is compatible with the current database version. The SDK version should be less than or equal to the current version of the database that the blackbox model will be running against. For example, if Kinetica is at version 7.0.12.0, the SDK tag version should be less than or equal to 7.0.12.0.
+The SDK is written in Python 3 and this is the only officially supported language for
+model code. However, an advanced user will note that it is theoretically possible to run
+other code and binaries inside the container and call out to it via the python module
+wrapper.
 
-1. Clone the project and change directory into the folder:
+Any required libraries and static assets (including model binaries (pickle, onyx etc) and
+weights files) are added to the container at build time via the Dockerfile.
 
-        git clone https://github.com/kineticadb/container-kml-blackbox-sdk.git
-        cd container-kml-blackbox-sdk
+This guide exists on-line at: [Kinetica Blackbox Software Development Kit (SDK) Guide](http://www.kinetica.com/docs/7.0/aaw/blackbox_sdk.html)
 
-2. Get a list of tags for the repository:
+See [Kinetica Documentation](http://www.kinetica.com/docs/7.1/index.html) for general product usage
 
-        git tag -l
+-----
 
-3. Check out the desired tagged version of the repository
+##  Preparing the model files
 
-        git checkout tags/<tag_name>
+1. Clone the Blackbox SDK github project
 
-    **NOTE:** The latest version compatible is preferred.
+```commandline
+git clone https://github.com/kineticadb/container-kml-blackbox-sdk.git
+cd container-kml-blackbox-sdk
+```
+Overview of SDK files and their use:
 
-## Setup
+| Filename               | Description                                                                                    |
+|------------------------|------------------------------------------------------------------------------------------------|
+| `sdk/bb_runner.py`     | * Kinetica database interface module.                                                          |
+| `bb_runner.sh`         | * Container entrypoint. Starts sdk/bb_runner.py.                                               |
+| `Dockerfile`           | Image build file. Add modules and assets here                                                  |
+| `bb_module_default.py` | Sample model module with example functions. Edit this file or create you're own.               |
+| `requirements.txt`     | Required Python libraries for your model. Packages `gpudb`, `zmq` and `requests` are required. |
+| `spec.json`            | Required introspection manifest which makes information about your models available to the DB. |                                                          
 
-The repository contains all the files needed to build and publish a blackbox model Docker container compatible with AAW. The important files and their function:
+`*` Editing these files in not recommended or supported
 
-**WARNING:** It's highly recommended the ``sdk/*`` and ``bb_runner.sh`` files are not modified!
+2. Add model code
 
-| Filename                    | Description                                                                                                                                                           |
-|-----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `sdk/bb_runner.py`          | Python script called from the Docker container entrypoint script. Contains the code necessary for the module(s) to interface with the `kinetica_black_box.py` script. |
-| `sdk/kinetica_black_box.py` | Python script called from `bb_runner.py`. Contains the code necessary for the blackbox module(s) to interface with the database.                                      |
-| `Dockerfile`                | File containing all the instructions for Docker to build the model image properly.                                                                                    |
-| `bb_module_default.py`      | Python script containing model code. The default code is a template for you to reuse and/or replace.                                                                  |
-| `bb_runner.sh`              | Entrypoint for the Docker container; this script will be run initially when AAW pulls the container for execution.                                                    |
-| `release.sh`                | Utility script for building and publishing the model to a Docker Hub or Docker Registry.                                                                              |
-| `requirements.txt`          | Text file that stores the required python libraries for the model. Default libraries (`gpudb`, `zmq`, `requests`) must be left intact.                                |
+Update `bb_module_default.py` with the desired model code. The model can contain as many functions as desired or 
+call as many other modules as desired, but the default function definition **must** take a dictionary in (`inputs`)
+and return a dictionary (`outputs`). Optionally you can copy and rename this file, remove all the function definitions
+and add your own.
 
-To setup the repository for publishing your model:
+3. Update model manifest
 
-1. Update `bb_module_default.py` with the desired model code. The model can contain as many methods as desired or call as many other modules as desired, but the default method **must** take a dictionary in (`inMap`) and return a dictionary (`outMap`):
+The file `spec.json` provides the name of the entry function for your model and the module file in which it is located.
+It also details the schema for both the input and output variable used buy each model and any in-container environment
+variables they may require. This file is read by the database when introspecting and configuring a model and **must not
+be renamed**. All model descriptions are included in this single manifest; there will be only one `spec.json` file.
 
-        import math
+It is recommended that `spec.json` be copied to another file, eg. 
+```commandline
+cp spec.json original_spec.json
+```
+then edit 
+`spec.json` using the original as a reference. The manifest added to the container in the Dockerfile and thus used by 
+your models must be named `spec.json`. Or use the trivial example found at the end of this README.
 
-        def predict_taxi_fare(inMap=None):
+The *main block* of the manifest file contains the following required key:value pairs:
 
-            # method code ...
+| Key         | Type   | Description                                                             |
+|-------------|--------|-------------------------------------------------------------------------|
+| `name`      | string | A name for the manifest (for user reference only).                      |
+| `desc`      | string | A description of the manifest (for user reference only).                |
+| `src_uri`   | string | The URI of the image as <registry>/<repo>/<image>:<tag>                 |
+| `type`      | string | Problem type for the models. Always "BLACKBOX".                         |
+| `functions` | array  | A list containing nested objects (see below) for each model function.   |
 
-            # Calculate fare amount from trip distance
-            fare_amount = (dist * 3.9)
+`name` and `desc` are required but only serve to document this file so they can contain any text. `type` is 
+reserved for future functionality, in this case it must always be "BLACKBOX"
 
-            outMap = {'fare_amount': fare_amount}
+The *functions block* of the manifest can contain references to as many model entry functions as
+you have in one or many module files. The structure is:
 
-            return outMap
+| Key                  | Type   | Description                                                           |
+|----------------------|--------|-----------------------------------------------------------------------|
+| `name`               | string | A name for the model function (for user reference only).              |
+| `desc`               | string | A description of the model function (for user reference only).        |
+| `bb_module`          | string | The module file containing the function (excluding the .py extension) |
+| `bb_function`        | string | The name of the entry function for the model in the module above.     |
+| `input_record_type`  | array  | Schema for the input variables as list of objects (see below).        |
+| `output_record_type` | array  | Schema for the output variables as list of objects (see below).       |
+| `env_vars`           | array  | A list of K:V pairs for container environment variables.              |
+| `compute-support`    | array  | A list of supported compute requirements. "CPU" or "GPU".             |
 
-1. Optionally, update the name of `bb_module_default.py`. If the module name is updated, it will need to be referenced appropriately when deploying the model via the AAW UI or the AAW REST API. See the *Usage* section for more information.
+`name` and `desc` are required but only serve to document the function in this file so they can contain any 
+text. `env_vars` must also be added in the Dockerfile if any are required for the model. They are included
+here for documentation purposes. `compute-support` may contain only "CPU" or "GPU". The latter requires a
+GPGPU equipped Kubernetes cluster with the NVIDIA driver installed.
 
-1. Open the `Dockerfile` in an editor and include any required installations that are not easily installable with `pip`:
+The *input_record_type* and *output_record_type* lists contain K:V blocks of the following format. One for
+each of the model input and output variables in the appropriate section. The input table (specified on deployment)
+**must** contain variables with the exact name and type specified here. The output table is automatically
+generated based on a table name provided during deployment. The schema of the output table is generate using
+the output_record_type specified below in addition to other columns containing the input variables (echoed for 
+auditing purposes), success flags, UUID's and any model failure logs.
 
-        RUN apt-get install -y git wget
+| Key         | Type   | Description                                                           |
+|-------------|--------|-----------------------------------------------------------------------|
+| `col_name`  | string | A name for the model function (for user reference only).              |
+| `col_type`  | string | A description of the model function (for user reference only).        |
+| `bb_module` | string | The module file containing the function (excluding the .py extension) |
 
-1. Add all module files:
+>NOTE: An output table name is specified during deployment but this table is generated by the system and 
+**must not** be pre-created.
 
-        ADD <module file.py> ./
+The `spec.json` file can be validated with Python:
+```commandline
+python -mjson.tool spec.json > /dev/null
+```
+This will only generate an error is there is a JSON syntax issue
 
-   **IMPORTANT:** By default, the `Dockerfile` includes a reference to `bb_module_default.py`. This reference **must** be updated if the file name was changed earlier.
+## Build configuration
 
-1. Open `requirements.txt` in an editor and include any additional required python libraries::
+4. Update the Python requirements file
 
-        numpy==1.16.3
-        tensorflow
+If you have imported packages beyond the Python standard library in your module file they must also be added to the
+`requirements.txt` file. Example:
+```
+scikit-learn==1.2.2
+```
+Not specifying a version will of course pull latest during the image build with potentially
+unintended consequences. There will be only one requirements file for all model functions and modules (if you are
+using more than one).
 
-   **IMPORTANT:** The default `gpudb`, `zmq`, and `requests` packages inside `requirements.txt` **must** be left in the file.
+5. Update the Dockerfile
 
-1. Open `release.sh` in a text editor and update the repository, image,  and tag for both the `build` and `push` statements:
+Edit the `Dockerfile` to ADD modules files other than `bb_module_default.py` and `bb_module_temperture.py` if you 
+have create a new one in step 1 above. Example:
+```
+ADD <my_module_file.py> ./
+```
+The two included sample modules (default and temperature) are not required if you have created a new one.
+If you are loading additional resources in your module such as pickled model binaries, weights files for ML models, 
+lookup tables etc. they must also be ADDed in the Dockerfile so that they are included in the image on build. Example:
+```
+ADD <my_sklearn_model.pkl> ./
+```
+No action is needed for the `spec.json` models manifest or the `requirements.txt` package index. Even though you will 
+have edited them in steps 3 and 4 respectivly above they are already included in the Dockerfile and must not be 
+renamed or the system will not be able to load them.
 
-        docker build -f Dockerfile -t <repo-name>/<image-name>:<tag-name> .
-        docker push <repo-name>/<image-name>:<tag-name>
+>NOTE: Only edit the [user editable] sections of the Dockerfile
 
-   **TIP:** The Docker repository will be created if it doesn't exist.
+## Build and push image
 
-## Usage
+6. Use docker to build the image locally and then push to your desired registry
 
-### Publishing the Model
+```commandline
+docker build -f Dockerfile -t <registry>/<repo-name>/<image-name>:<tag-name> .
+```
 
-1. Login into your Docker Hub or Docker Registry:
+7. Push image to your desired registry
+```commandline
+docker push <registry><repo-name>/<image-name>:<tag-name>
+```
 
-        # Docker Hub
-        docker login
+## Deploying the model via Kinetica Workbench
 
-        # Docker Registry
-        docker login <hostname>:<port>
+Deploying a model in Kinetica involves creating a container registry, importing a model from that 
+registry (introspection) and then launching the containerized model in either batch or continuous 
+(streaming) modes. SQL bindings are provided for these actions and are described in detain in the 
+main [documentation](https://docs.kinetica.com/7.1/sql/ml/).
 
-2. Run the `release.sh` script to build a Docker image of the model and publish it to the provided Docker Hub or Docker Registry:
-
-        ./release.sh
-
-### Importing the Model
-
-After publishing the model, it can be imported into AAW using two methods:
-
-* REST API (via `cURL`)
-* AAW User Interface (UI)
-
-#### REST API
-
-If using the REST API, a model is defined using JSON. The `cURL` command line tool can be used to send a JSON string or file to AAW. To import a blackbox model into AAW using ``cURL`` and the REST API:
-
-1. Define the model. *Kinetica* recommends placing the model definition inside a local JSON file.
-1. Post the JSON to the `/model/blackbox/instance/create` endpoint of the AAW REST API:
-
-        # Using a JSON file
-        curl -X POST -H "Content-Type: application/json" -d @<model_file>.json http://<kinetica-host>:9187/kml/model/blackbox/instance/create
-
-        # Using a JSON string
-        curl -X POST -H "Content-Type: application/json" -d '{"model_inst_name": "<model_name>", ... }' http://<kinetica-host>:9187/kml/model/blackbox/instance/create
-
-To aid in creating the necessary JSON, use the following endpoint and schema:
-
-**Endpoint name**: ``/model/blackbox/instance/create``
-
-**Input parameters**:
-
-| Name | Type | Description |
-|---------------------|---------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
-| `model_inst_name` | string | Name of the model. |
-| `model_inst_desc` | string | Optional description of the model. |
-| `problem_type` | string | Problem type for the model. Always `BLACKBOX`. |
-| `model_type` | string | Type for the model. Always `BLACKBOX`. |
-| `input_record_type` | array of map(s) of strings to strings | An array containing a map for each input column. Requires two keys. Valid key name, type, and descriptions found below. |
-| `model_config` | map of strings to various | A map containing model configuration information. Valid key name, type, and descriptions found below. |
-
-Array `input_record_type` of map keys:
-
-**IMPORTANT:** There will need to be as many maps (containing both name and type) as there are columns in the `inMap` variable inside the default blackbox module.
-
-| Name | Type | Description |
-|------------|--------|----------------------------|
-| `col_name` | string | Name for the input column. |
-| `col_type` | string | Type for the input column. |
-
-Map `model_config` keys:
-
-**IMPORTANT:** There will need to be as many maps (containing both name and type) in `output_record_type` as there are columns in the `outMap` variable inside the default blackbox module.
-
-| Name | Type | Description |
-|----------------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `db_user` | string | Username for database authentication. |
-| `db_pass` | string | Password for database authentication. |
-| `blackbox_module` | string | Module name for the blackbox model. |
-| `blackbox_function` | string | Function name inside the blackbox module. |
-| `container` | string | Docker URI for the container, e.g., `<repo_name>/<image_name>:<tag_name>` |
-| `output_record_type` | string | An array containing a map for each output column. Similar to `input_record_type`, requires two keys: `col_name` -- a string value representing the name of the output column; `col_type` -- a string value representing the type of the output column. |
-
-**Example JSON**:
-
-The final JSON string should look similar to this:
-
+## Example JSON manifest (spec.json)
+```json
+{
+  "model_inst_name": "Taxi Fare Predictor",
+  "model_inst_desc": "Blackbox model for on-demand deployments",
+  "problem_type": "BLACKBOX",
+  "model_type": "BLACKBOX",
+  "input_record_type": [
     {
-      "model_inst_name": "Taxi Fare Predictor",
-      "model_inst_desc": "Blackbox model for on-demand deployments",
-      "problem_type": "BLACKBOX",
-      "model_type": "BLACKBOX",
-      "input_record_type": [
-        {
-          "col_name": "pickup_longitude",
-          "col_type": "float"
-        },
-        {
-          "col_name": "pickup_latitude",
-          "col_type": "float"
-        },
-        {
-          "col_name": "dropoff_longitude",
-          "col_type": "float"
-        },
-        {
-          "col_name": "dropoff_latitude",
-          "col_type": "float"
-        }
-      ],
-      "model_config": {
-        "db_user": "",
-        "db_pass": "",
-        "blackbox_module": "bb_module_default",
-        "blackbox_function": "predict_taxi_fare",
-        "container": "kinetica/kinetica-blackbox-quickstart:7.0.1",
-        "output_record_type": [
-          {
-            "col_name": "fare_amount",
-            "col_type": "double"
-          }
-        ]
-      }
+      "col_name": "pickup_longitude",
+      "col_type": "float"
+    },
+    {
+      "col_name": "pickup_latitude",
+      "col_type": "float"
+    },
+    {
+      "col_name": "dropoff_longitude",
+      "col_type": "float"
+    },
+    {
+      "col_name": "dropoff_latitude",
+      "col_type": "float"
     }
+  ],
+  "model_config": {
+    "db_user": "",
+    "db_pass": "",
+    "blackbox_module": "bb_module_default",
+    "blackbox_function": "predict_taxi_fare",
+    "container": "kinetica/kinetica-blackbox-quickstart:7.0.1",
+    "output_record_type": [
+      {
+        "col_name": "fare_amount",
+        "col_type": "double"
+      }
+    ]
+  }
+}
+```
 
-#### AAW User Interface (UI)
-
-The AAW UI offers a simpler WYSIWYG-style approach to importing a blackbox model. To import a blackbox model into the UI:
-
-1. Navigate to the AAW UI (`http://<aaw-host>:8070`)
-1. Click `Models + Analytics`.
-1. Click `+ Add Model` then `New Blackbox`.
-1. Under `Create a Blackbox Model Manually`, click `Create`.
-1. Provide a `Model Name` and optional `Model Description`.
-1. Input the Docker URI for the container, e.g., `<repo_name>/<image_name>:<tag_name>`
-1. Input the `Module Name` and `Module Function`.
-1. For `Input Columns`:
-
-   1. Click `Add Input Column` to create input columns.
-   1. Provide a `Column` name and `Type`.
-
-1. For `Output Columns`:
-
-   1. Click `Add Output Column` to create output columns.
-   1. Provide a `Column` name and `Type`.
-
-1. Click :guilabel:`Create`.
-
-**Example UI**:
-
-The final UI inputs should look similar to this:
-
-![aaw ui new blackbox model filled](http://www.kinetica.com/docs/7.0/aaw/img/aaw_ui_new_bb_model_filled.png)
-
-(c) Kinetica, Inc.

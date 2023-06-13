@@ -1,131 +1,171 @@
+"""Kinetica Blackbox example usage functions.
+
+Demonstration module with demonstrations of basic SDK
+functionality including:
+
+    row-by-row inference
+    bulk inference
+    one-to-many multirow inference output
+    environment variable usage
+    etc.
+
+Kinetica Blackbox Model
+(c) 2023 Kinetica DB, Inc.
+
+"""
+
 import os
 import time
 import random
 
 import pandas as pd
 
-def blackbox_function_identity_custom_multiout(inMap):
-    rows_out = 1
-    if "character" in inMap and inMap["character"]=="Arvin Sloane":
-        rows_out = 2
-    if "character" in inMap and inMap["character"]=="Sidney Bristow":
-        rows_out = 2
-    outMap = inMap
-    return [outMap for i in range(rows_out)]
-
-def blackbox_function_math(inMap):
-    f1=int(inMap['figure1'])
-    f2=int(inMap['figure2'])
-    mylabel=inMap['mylabel']
-
-    if 'please_crash_me' in mylabel:
-        raise Exception("User-initiated purposeful failure! Go Figure")
-
-    outMap = {
-        'sum':f1+f2,
-        'product':f1*f2,
-        'max':max([f1,f2]),
-        'suminwords': mylabel + " " + str(int(f1+f2))
-        }
-    return outMap
-
 from sdk.bb_runner import bulk_infer_capable
 
+
+def basic_example(inputs):
+    """Demonstrate basic row-by-row calculation."""
+
+    f1 = int(inputs['figure1'])
+    f2 = int(inputs['figure2'])
+    mylabel = inputs['mylabel']
+
+    outputs = {
+        'sum': f1 + f2,
+        'product': f1 * f2,
+        'max': max([f1, f2]),
+        'suminwords': f"{mylabel} {str(int(f1 + f2))}"
+    }
+
+    return outputs
+
+
 @bulk_infer_capable
-def blackbox_function_math_bulkinfer(inMap):
-    # Unlike the non-batched variant above, inMap here is an ARRAY of dicts
-    in_df = pd.DataFrame(inMap)
-    in_df['figure1_numeric'] = pd.to_numeric(in_df["figure1"])
-    in_df['figure2_numeric'] = pd.to_numeric(in_df["figure2"])
+def bulk_infer_example(inputs):
+    """Demonstrate batched variant for inputs."""
 
-    in_df['sum'] = in_df["figure1_numeric"] + in_df["figure2_numeric"]
-    in_df['product'] = in_df["figure1_numeric"] * in_df["figure2_numeric"]
-    in_df['max'] = in_df[["figure1_numeric", "figure2_numeric"]].max(axis=1)
-    in_df['suminwords'] = in_df["mylabel"] + " " + in_df['sum'].astype(str)
-    del in_df['figure1_numeric']
-    del in_df['figure2_numeric']
-    return in_df.to_dict('records')
+    # Requires the "bulk_infer_capable" decorator (see module input statement at top)
 
-def blackbox_function_math_multiout(inMap):
-    f1=int(inMap['figure1'])
-    f2=int(inMap['figure2'])
-    mylabel=inMap['mylabel']
+    # Inputs is an array of dicts
+    df = pd.DataFrame(inputs)
+    df['figure1_numeric'] = pd.to_numeric(df['figure1'])
+    df['figure2_numeric'] = pd.to_numeric(df['figure2'])
 
-    if 'please_crash_me' in mylabel:
-        raise Exception("User-initiated purposeful failure! Go Figure")
+    # Calculations
+    df['sum'] = df['figure1_numeric'] + df['figure2_numeric']
+    df['product'] = df['figure1_numeric'] * df['figure2_numeric']
+    df['max'] = df[['figure1_numeric', 'figure2_numeric']].max(axis=1)
+    df['suminwords'] = f"{df['mylabel']} {df['sum'].astype(str)}"
 
-    out_q = [
-        {'operation':'sum', 'result':f1+f2},
-        {'operation':'product', 'result':f1*f2},
-        {'operation':'min', 'result':min([f1,f2])},
-        {'operation':'max', 'result':max([f1,f2])}]
-    return out_q
+    # Remove the inputs from the data frame
+    del df['figure1_numeric']
+    del df['figure2_numeric']
 
-def blackbox_function_advanced_math(inMap):
-    f1=int(inMap['figure1'])
-    f2=int(inMap['figure2'])
-    mylabel=inMap['mylabel']
+    return df.to_dict('records')
 
-    if 'please_crash_me' in mylabel:
-        raise Exception("User-initiated purposeful failure! Go Figure")
 
-    outMap = {
-        'division':f1/f2,
-        'modulo':f1%f2,
-        'min':min([f1,f2]),
-        'productinwords': mylabel + " " + str(int(f1*f2))
+def multi_out_example(inputs):
+    """Demonstrate multiple outputs from one input record."""
+
+    f1 = int(inputs['figure1'])
+    f2 = int(inputs['figure2'])
+
+    # Generate, in this example, 4 output rows for each input
+    # Outputs is now a list of dicts
+    outputs = [
+        {
+            'operation': 'sum',
+            'result': f1 + f2
+        },
+        {
+            'operation': 'product',
+            'result': f1 * f2
+        },
+        {
+            'operation': 'min',
+            'result': min([f1, f2])
+        },
+        {
+            'operation': 'max',
+            'result': max([f1, f2])
         }
-    return outMap
+    ]
 
-def blackbox_function_math_superslow(inMap):
-    f1=int(inMap['figure1'])
-    f2=int(inMap['figure2'])
-    mylabel=inMap['mylabel']
+    return outputs
 
-    # artificial delay
-    on_time_calcs_ratio = 0.99
-    if 'on_time_calcs_ratio' in inMap:
-        on_time_calcs_ratio=int(inMap['on_time_calcs_ratio'])
 
-    if random.random() >= 0.9999: # EXTREME SLOWDOWN!
-        time.sleep(60)
-    elif random.random() >= 0.999: # The 9-9-9 Plan!
-        time.sleep(15)
-    elif random.random() >= on_time_calcs_ratio: # Normal slowdown!
-        time.sleep(1)
+def custom_multi_out_example(inputs):
+    """Demonstrate multi-row output triggerd with flag in data."""
 
-    if 'please_crash_me' in mylabel:
-        raise Exception("User-initiated purposeful failure! Go Figure")
+    # Default is one row in, one row out
+    rows_out = 1
 
-    outMap = {
-        'sum':f1+f2,
-        'product':f1*f2,
-        'max':max([f1,f2]),
-        'suminwords': mylabel + " " + str(int(f1+f2))
-        }
-    return outMap
+    # If boolean "multiout" is set then generate more than 1 output rows per input
+    if inputs.get('multiout') and inputs['multiout'].lower() == 'true':
+        rows_out = 2
+    outputs = inputs
 
-# BlackBox function to demonstrate intake of environment variables
-def blackbox_function_envvar_demo(inMap):
-    f1=int(inMap['figure1'])
-    f2=int(inMap['figure2'])
+    return [
+        outputs for _ in range(rows_out)
+    ]
 
+
+def env_var_example(inputs):
+    """Demonstrate use of environment variables."""
+
+    f1 = int(inputs['figure1'])
+    f2 = int(inputs['figure2'])
+
+    # Read environment variables from the container
     if 'ENVVAR1' not in os.environ:
-        raise Exception("Missing environment variable ENVVAR1")
-    ENVVAR1 = os.environ["ENVVAR1"]
+        raise Exception('Missing environment variable ENVVAR1')
+    var1 = os.environ['ENVVAR1']
 
     if 'ENVVAR2' not in os.environ:
-        raise Exception("Missing environment variable ENVVAR2")
-    ENVVAR2 = os.environ["ENVVAR2"]
+        raise Exception('Missing environment variable ENVVAR2')
+    var2 = os.environ['ENVVAR2']
 
-    outMap = {
-        'sum':f1+f2,
-        'product':f1*f2,
-        'max':max([f1,f2]),
-        'suminwords': f"{ENVVAR1} {f1+f2} {ENVVAR2}"
-        }
-    return outMap
+    outputs = {
+        'sum': f1 + f2,
+        'product': f1 * f2,
+        'max': max([f1, f2]),
+        'greeting': f"{var1} {var2}"
+    }
 
-def classify_petworthiness_engineered_inputs(inMap):
-    outMap = inMap
-    return outMap
+    return outputs
+
+
+def timer_example(inputs):
+    """Demonstrate performance timer."""
+
+    f1 = int(inputs['figure1'])
+    f2 = int(inputs['figure2'])
+    answer = 0
+
+    # Determine how long each inference took
+    t0 = time.time()
+    for _ in range(random.randint(1, 5)):
+        answer = f1 + f2
+        time.sleep(1)
+    t1 = time.time()
+
+    outputs = {
+        'inference': answer,
+        'compute_time': t1 - t0
+    }
+
+    return outputs
+
+
+def crash_example(inputs):
+    """Demonstrate crash within the model function."""
+
+    record = inputs['text']
+
+    # Generate stacktrace in the output table
+    if 'crash now' in record:
+        raise Exception('Intentional failure in model function!')
+    else:
+        outputs = {'text': record}
+
+    return outputs

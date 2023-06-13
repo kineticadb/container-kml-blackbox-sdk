@@ -1,43 +1,45 @@
-# Copyright (c) 2020 Kinetica DB Inc.
+# Kinetica Blackbox SDK build
 #
-# Kinetica Machine Learning
-# Kinetica Machine Learning BlackBox Container SDK + Trivial Samples
+# SDK for containerized models with usage examples
 #
-# for support, contact Saif Ahmed (support@kinetica.com)
-#
+# Kinetica Machine Learning (KML)
+# (c) 2023 Kinetica DB, Inc.
 
+# Base image
+FROM python:3.11.3-slim-bullseye
 
-# End users are welcome to use any python-3.6 base container of their choice
-FROM kinetica/ctnr-kml-base-cpu:revision01
-
+# Image labels
 LABEL maintainer="support@kinetica.com"
-LABEL Description="Kinetica Machine Learning BlackBox SDK and starter examples."
-LABEL Author="Saif Ahmed; Julian Jenkins"
+LABEL Description="Kinetica model blackbox SDK with examples"
 
+# Model path
 RUN mkdir -p /opt/gpudb/kml
 WORKDIR "/opt/gpudb/kml"
 
+# Model introspection manifest
 ADD spec.json  ./
 
-# Install Required Libraries and Dependencies
+# Required libraries and dependencies
 ADD requirements.txt  ./
 RUN pip install --upgrade pip
-# ADD gpudb-api-python/gpudb-*-cp36-cp36m-manylinux1_x86_64.whl ./
-# RUN pip install ./gpudb-*.whl
-RUN python -m pip install --upgrade pip
-
+#RUN python -m pip install --upgrade pip
 RUN pip install -r requirements.txt --no-cache-dir
 
-# Add Kinetica BlackBox SDK
+# Kinetica BlackBox SDK
 ADD bb_runner.sh ./
 ADD sdk ./sdk
 
+# Module files [user editable]
 ADD bb_module_default.py ./
 ADD bb_module_temperature.py ./
-ADD bb_module_tests.py ./
-ADD bb_module_stress.py ./
 
+# Additional resources [user editable]
+# ADD my_model_binary.pkl ./
+# ADD my_resouce_file.csv ./
+
+# EULA
 ADD END_USER_LICENSE_AGREEMENT.txt ./
 
+# Container entrypoint
 RUN ["chmod", "+x",  "bb_runner.sh"]
 ENTRYPOINT ["/opt/gpudb/kml/bb_runner.sh"]

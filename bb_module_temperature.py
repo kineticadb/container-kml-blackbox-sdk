@@ -1,55 +1,62 @@
-import time
-import random
+"""Example temperature conversion module.
 
-import pandas as pd
+Demonstration module with two model functions for converting
+temperature between Fahrenheit and centigrade units.
 
-from sdk.bb_runner import bulk_infer_capable
+Kinetica Blackbox Model
+(c) 2023 Kinetica DB, Inc.
+"""
 
 
+def convert_to_celsius(inputs=None):
+    """Convert from Fahrenheit with H2O state."""
 
-def convert_to_celsius(inMap=None):
+    temp_f = int(inputs['temp_f'])
+    temp_c = (temp_f - 32) * 5 / 9
+    temp_k = (temp_f - 32) * 5 / 9 + 273.15
 
-    F = int(inMap['temp_f'])
+    if temp_k < 0:
+        raise ValueError('Nonsensical inputs - below absolute zero')
 
-    C = (F - 32) * 5 / 9
-    K = (F - 32) * 5 / 9 + 273.15
+    water = 'H20 in Liquid state at sea level'
 
-    if K < 0:
-        raise ValueError("Nonsensical inputs - below absolute zero")
+    if temp_c > 100:
+        water = 'Above H20 Boiling Point'
 
-    BF = "H20 in Liquid state at sea level"
+    elif temp_c < 0:
+        water = 'Below H20 Freezing Point'
 
-    if C > 100:
-        BF = "Above H20 Boiling Point"
+    outputs = {
+        'temp_c': temp_c,
+        'temp_k': temp_k,
+        'state': water
+    }
 
-    elif C < 0:
-        BF = "Below H20 Freezing Point"
+    return [outputs]
 
-    outMap = {'temp_c': C,
-              'temp_k': K,
-              'state': BF}
 
-    return [outMap]
+def convert_to_fahrenheit(inputs=None):
+    """Convert from centigrade with H20 state."""
 
-def convert_to_fahrenheit(inMap=None):
+    temp_c = int(inputs['temp_c'])
+    temp_f = (temp_c * 9 / 5) + 32
+    temp_k = (temp_f - 32) * 5 / 9 + 273.15
 
-    C = int(inMap['temp_c'])
-    F = (C * 9 / 5) + 32
-    K = (F - 32) * 5 / 9 + 273.15
+    if temp_k < 0:
+        raise ValueError('Nonsensical inputs - below absolute zero')
 
-    if K < 0:
-        raise ValueError("Nonsensical inputs - below absolute zero")
+    water = 'H20 in Liquid state at sea level'
 
-    BF = "H20 in Liquid state at sea level"
+    if temp_c > 100:
+        water = 'Above H20 Boiling Point'
 
-    if C > 100:
-        BF = "Above H20 Boiling Point"
+    elif temp_c < 0:
+        water = 'Below H20 Freezing Point'
 
-    elif C < 0:
-        BF = "Below H20 Freezing Point"
+    outputs = {
+        'temp_f': temp_f,
+        'temp_k': temp_k,
+        'state': water
+    }
 
-    outMap = {'temp_f': F,
-              'temp_k': K,
-              'state': BF}
-
-    return outMap
+    return [outputs]

@@ -1,41 +1,29 @@
 {
-  "name": "Kinetica BlackBox SDK: Trivial Example BlackBox functions",
-  "desc": "Kinetica BlackBox SDK: Trivial BlackBox functions demonstrating possible options and permutations",
-  "icon_uri": "https://kinetica-aaw-marketplace.s3.amazonaws.com/logos/appstore_logo_model.png",
-  "src_uri": "kinetica/kinetica-blackbox-sdk:r7.1.4",
+  "name": "Kinetica BlackBox SDK",
+  "desc": "Usage examples for model functions",
+  "src_uri": "kinetica/kinetica-blackbox-sdk:r7.1.9",
   "type": "BLACKBOX",
-  "industry": [],
-  "keywords": [],
-  "docs_url": "",
-  "api_url": "",
-  "is_featured": true,
-  "is_available": true,
-  "thumbnail_url": "",
-  "screenshot_urls": [],
   "functions": [
     {
-      "name": "Trivial Sample BlackBox function demonstrating function with required params of different types",
-      "desc": "Trivial Sample BlackBox function demonstrating function with required params of different types.",
+      "name": "The mathbox",
+      "desc": "Row-by-row inference; Trivial math calculations",
       "bb_module": "bb_module_default",
-      "bb_function": "blackbox_function_math",
+      "bb_function": "basic_example",
       "input_record_type": [
         {
           "col_name": "figure1",
           "col_type": "double",
-          "col_desc": "First figure for mathematical operations",
-          "col_default_val": "90210"
+          "col_desc": "First figure for mathematical operations"
         },
         {
           "col_name": "figure2",
           "col_type": "double",
-          "col_desc": "Second figure for mathematical operations",
-          "col_default_val": "11215"
+          "col_desc": "Second figure for mathematical operations"
         },
         {
           "col_name": "mylabel",
           "col_type": "string|char64",
-          "col_desc": "Label for enhancing output",
-          "col_default_val": "The New Yorker"
+          "col_desc": "Label for enhancing output"
         }
       ],
       "output_record_type": [
@@ -57,7 +45,7 @@
         {
           "col_name": "suminwords",
           "col_type": "string|store_only",
-          "col_desc": "Sum of input figures provided with labeled flair"
+          "col_desc": "Sum of input figures provided with added label string"
         }
       ],
       "env_vars": [],
@@ -66,28 +54,25 @@
       ]
     },
     {
-      "name": "Bulk Inference Example",
-      "desc": "Trivial Sample BlackBox function demonstrating Bulk Inference.",
+      "name": "Performance inference",
+      "desc": "Operate on multiple records (as a dataframe) simultaneously for compatible models",
       "bb_module": "bb_module_default",
-      "bb_function": "blackbox_function_math_bulkinfer",
+      "bb_function": "bulk_infer_example",
       "input_record_type": [
         {
           "col_name": "figure1",
           "col_type": "double",
-          "col_desc": "First figure for mathematical operations",
-          "col_default_val": "90210"
+          "col_desc": "First figure for mathematical operations"
         },
         {
           "col_name": "figure2",
           "col_type": "double",
-          "col_desc": "Second figure for mathematical operations",
-          "col_default_val": "11215"
+          "col_desc": "Second figure for mathematical operations"
         },
         {
           "col_name": "mylabel",
           "col_type": "string|char64",
-          "col_desc": "Label for enhancing output",
-          "col_default_val": "The New Yorker"
+          "col_desc": "Label for enhancing output"
         }
       ],
       "output_record_type": [
@@ -109,7 +94,7 @@
         {
           "col_name": "suminwords",
           "col_type": "string|store_only",
-          "col_desc": "Sum of input figures provided with labeled flair"
+          "col_desc": "Sum of input figures provided with added label string"
         }
       ],
       "env_vars": [],
@@ -118,28 +103,25 @@
       ]
     },
     {
-      "name": "Trivial Sample BlackBox function demonstrating function with multiple output rows",
-      "desc": "Trivial Sample BlackBox function demonstrating function with multiple output rows. Performs the same operations as blackbox_function_math, but with multiple indexed output rows rather than wide outputs.",
+      "name": "One-to-many row output",
+      "desc": "Multi-row output common with ML classifiers",
       "bb_module": "bb_module_default",
-      "bb_function": "blackbox_function_math_multiout",
+      "bb_function": "multi_out_example",
       "input_record_type": [
         {
           "col_name": "figure1",
           "col_type": "double",
-          "col_desc": "First figure for mathematical operations",
-          "col_default_val": "90210"
+          "col_desc": "First figure for mathematical operations"
         },
         {
           "col_name": "figure2",
           "col_type": "double",
-          "col_desc": "Second figure for mathematical operations",
-          "col_default_val": "11215"
+          "col_desc": "Second figure for mathematical operations"
         },
         {
           "col_name": "mylabel",
           "col_type": "string|char64",
-          "col_desc": "Label for enhancing output",
-          "col_default_val": "The New Yorker"
+          "col_desc": "Label for enhancing output"
         }
       ],
       "output_record_type": [
@@ -160,60 +142,8 @@
       ]
     },
     {
-      "name": "Trivial Sample BlackBox function demonstrating different operations with required params of different types",
-      "desc": "Trivial Sample BlackBox function demonstrating different operations (as compared to blackbox_function_math.) Meant to demonstrate co-existence of different functions in the same module, each independently callable.",
-      "bb_module": "bb_module_default",
-      "bb_function": "blackbox_function_advanced_math",
-      "input_record_type": [
-        {
-          "col_name": "figure1",
-          "col_type": "double",
-          "col_desc": "First figure for mathematical operations",
-          "col_default_val": "90210"
-        },
-        {
-          "col_name": "figure2",
-          "col_type": "double",
-          "col_desc": "Second figure for mathematical operations",
-          "col_default_val": "11215"
-        },
-        {
-          "col_name": "mylabel",
-          "col_type": "string|char64",
-          "col_desc": "Label for enhancing output",
-          "col_default_val": "The New Yorker"
-        }
-      ],
-      "output_record_type": [
-        {
-          "col_name": "division",
-          "col_type": "double",
-          "col_desc": "Division of input figures provided"
-        },
-        {
-          "col_name": "modulo",
-          "col_type": "double",
-          "col_desc": "Modulo of input figures provided"
-        },
-        {
-          "col_name": "min",
-          "col_type": "double",
-          "col_desc": "Minimum of two of input figures provided"
-        },
-        {
-          "col_name": "productinwords",
-          "col_type": "string|store_only",
-          "col_desc": "Product of input figures provided with labeled flair"
-        }
-      ],
-      "env_vars": [],
-      "compute-support": [
-        "CPU"
-      ]
-    },
-    {
-      "name": "Function with environment variables",
-      "desc": "Trivial Sample BlackBox function with two required parameters and two required environment variables",
+      "name": "Environment variables",
+      "desc": "Usage of in-container environment variables added during image build (Dockerfile)",
       "bb_module": "bb_module_default",
       "bb_function": "blackbox_function_envvar_demo",
       "input_record_type": [
@@ -240,7 +170,7 @@
           "col_type": "double"
         },
         {
-          "col_name": "suminwords",
+          "col_name": "greeting",
           "col_type": "string|store_only"
         }
       ],
@@ -248,14 +178,14 @@
         {
           "var_name": "ENVVAR1",
           "var_type": "string",
-          "var_desc": "Description for environment variable",
-          "var_default_val": "hello"
+          "var_desc": "Description for environment variable 1",
+          "var_default_val": "Hello"
         },
         {
           "var_name": "ENVVAR2",
           "var_type": "string",
-          "var_desc": "Another description for yet another environment variable",
-          "var_default_val": "world"
+          "var_desc": "Description for environment variable 2",
+          "var_default_val": "World!"
         }
       ],
       "compute-support": [
@@ -263,24 +193,22 @@
       ]
     },
     {
-      "name": "Kinetica BlackBox Sample: Temperature conversion",
-      "desc": "Kinetica BlackBox Sample: Temperature conversion from fahrenheit to centrigrade",
+      "name": "Convert to Celsius",
+      "desc": "Different module: Temperature converter (F to C)",
       "bb_module": "bb_module_temperature",
       "bb_function": "convert_to_celsius",
-      "multiout": false,
       "input_record_type": [
         {
           "col_name": "temp_f",
           "col_type": "double",
-          "col_desc": "Temperature in fahrenheit",
-          "col_default_val": "18.7"
+          "col_desc": "Temperature in fahrenheit"
         }
       ],
       "output_record_type": [
         {
           "col_name": "temp_c",
           "col_type": "double",
-          "col_desc": "Temperature converted to centrigrade"
+          "col_desc": "Temperature converted to centigrade"
         },
         {
           "col_name": "temp_k",
@@ -296,17 +224,15 @@
       "env_vars": []
     },
     {
-      "name": "Kinetica BlackBox Sample: Temperature conversion",
-      "desc": "Kinetica BlackBox Function Sample: Temperature conversion from centrigrade to fahrenheit -- mean to demonstrate the use of functions outside of bb_module_default.",
+      "name": "Convert to Fahrenheit",
+      "desc": "Different module: Temperature converter (C to F)",
       "bb_module": "bb_module_temperature",
       "bb_function": "convert_to_fahrenheit",
-      "multiout": false,
       "input_record_type": [
         {
           "col_name": "temp_c",
           "col_type": "double",
-          "col_desc": "Temperature in centrigrade",
-          "col_default_val": "187"
+          "col_desc": "Temperature in centigrade"
         }
       ],
       "output_record_type": [
@@ -329,59 +255,85 @@
       "env_vars": []
     },
     {
-      "name": "Kinetica BlackBox Sample: Trivial Function to Test Feature Engineered Inputs",
-      "desc": "Kinetica BlackBox Trivial Function Sample demonstrating features engineered within Kinetica AAW",
+      "name": "Timer",
+      "desc": "Demonstrate timing withing the inference function",
       "bb_module": "bb_module_default",
-      "bb_function": "classify_petworthiness_engineered_inputs",
-      "multiout": false,
-      "feature_memory_file": "featmem_zoo.json",
+      "bb_function": "timer_example",
       "input_record_type": [
         {
-          "col_name": "animal",
-          "col_type": "string|char32"
+          "col_name": "figure1",
+          "col_type": "double",
+          "col_desc": "First figure for mathematical operations"
         },
         {
-          "col_name": "happy",
-          "col_type": "double"
-        },
-        {
-          "col_name": "height",
-          "col_type": "double"
-        },
-        {
-          "col_name": "species",
-          "col_type": "string|char32"
-        },
-        {
-          "col_name": "age",
-          "col_type": "double"
-        },
-        {
-          "col_name": "yield",
-          "col_type": "double"
-        },
-        {
-          "col_name": "legs",
-          "col_type": "double"
-        },
-        {
-          "col_name": "tag",
-          "col_type": "string|char32"
-        },
-        {
-          "col_name": "speed",
-          "col_type": "double"
-        },
-        {
-          "col_name": "ipaddress",
-          "col_type": "string|char32"
-        },
-        {
-          "col_name": "subset",
-          "col_type": "string|char8"
+          "col_name": "figure2",
+          "col_type": "double",
+          "col_desc": "Second figure for mathematical operations"
         }
       ],
       "output_record_type": [
+        {
+          "col_name": "inference",
+          "col_type": "double",
+          "col_desc": "Sum of input figures provided"
+        },
+        {
+          "col_name": "compute_time",
+          "col_type": "double",
+          "col_desc": "Time in compute loop; Artificially simulated with random sleep"
+        }
+      ],
+      "env_vars": []
+    },
+    {
+      "name": "Bombs away",
+      "desc": "Simulate a crash in the inference code",
+      "bb_module": "bb_module_default",
+      "bb_function": "crash_example",
+      "input_record_type": [
+        {
+          "col_name": "text",
+          "col_type": "string|char128",
+          "col_desc": "Text string; If phrase 'crash now' appears the container will fault"
+        }
+      ],
+      "output_record_type": [
+        {
+          "col_name": "text",
+          "col_type": "string|char128",
+          "col_desc": "Pass text through if no crash"
+        }
+      ],
+      "env_vars": []
+    },
+    {
+      "name": "Forced multi-out",
+      "desc": "Use a flag in the record to signal a multi row output",
+      "bb_module": "bb_module_default",
+      "bb_function": "custom_multi_out_example",
+      "input_record_type": [
+        {
+          "col_name": "text",
+          "col_type": "string|char64",
+          "col_desc": ""
+        },
+        {
+          "col_name": "multiout",
+          "col_type": "string|char16",
+          "col_desc": "Set 'true' to engage multi-record out"
+        }
+      ],
+      "output_record_type": [
+        {
+          "col_name": "text",
+          "col_type": "string",
+          "col_desc": "Passthrough"
+        },
+        {
+          "col_name": "multiout",
+          "col_type": "string",
+          "col_desc": "Passthrough"
+        }
       ],
       "env_vars": []
     }
